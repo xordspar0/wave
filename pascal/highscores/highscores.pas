@@ -20,6 +20,8 @@ type
 		renderer : PSDL_Renderer;
 		c        : Character;
 		gems     : Array [0..19] of Gem;
+		loot     : Array [0..4] of Gem;
+		lootNum  : Smallint;
 	end;
 
 
@@ -76,7 +78,7 @@ begin
 	game.renderer := Nil;
 
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_CreateWindowAndRenderer(800, 600, 0, @game.window, @game.renderer);
+	SDL_CreateWindowAndRenderer(640, 480, 0, @game.window, @game.renderer);
 
 	Init := game;
 end;
@@ -105,6 +107,8 @@ begin
 		visible := true;
 	end;
 
+	game.lootNum := 0;
+
 	GameSetup := game;
 end;
 
@@ -117,7 +121,12 @@ begin
 	begin
 		if visible and (x = game.c.x) and (y = game.c.y) then
 		begin
-			game.gems[i].visible := false;
+			if game.lootNum <= High(game.loot) then
+			begin
+				game.loot[game.lootNum] := game.gems[i];
+				game.lootNum := game.lootNum + 1;
+				game.gems[i].visible := false;
+			end;
 		end;
 	end;
 
@@ -168,33 +177,59 @@ end;
 
 procedure Gameloop(game : Gamestate);
 var
-	running : Boolean = true;
+	phase : (running, score, quit) = running;
 	event : TSDL_Event;
+
+	i : Smallint;
+	sum : Integer = 0;
 begin
-	while running do
+	while phase <> quit do
 	begin
-		while SDL_PollEvent(@event) = 1 do
+
+		case phase of
+		running:
 		begin
-			case event.type_ of
-			SDL_QUITEV: running := false;
-			SDL_KEYDOWN:
-				if event.key.repeat_ = 0 then
-				case event.key.keysym.sym of
-				SDLK_UP:    game.c.y -= 10;
-				SDLK_DOWN:  game.c.y += 10;
-				SDLK_LEFT:  game.c.x -= 10;
-				SDLK_RIGHT: game.c.x += 10;
+			while SDL_PollEvent(@event) = 1 do
+			begin
+				case event.type_ of
+				SDL_QUITEV: phase := quit;
+				SDL_KEYDOWN:
+					if event.key.repeat_ = 0 then
+					case event.key.keysym.sym of
+					SDLK_UP:    game.c.y -= 10;
+					SDLK_DOWN:  game.c.y += 10;
+					SDLK_LEFT:  game.c.x -= 10;
+					SDLK_RIGHT: game.c.x += 10;
+					end;
 				end;
 			end;
+
+			game := Grab(game);
+
+			if game.lootNum = 5 then
+				phase := score;
+		end;
+
+		score:
+		begin
+			for i := Low(game.loot) to game.lootNum do
+			begin
+				sum := sum + game.loot[i].hue;
+			end;
+
+			Writeln('Game over!');
+			Writeln('Score: ', sum);
+
+			phase := quit;
+		end;
+
 		end;
 
 		SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 0);
 		SDL_RenderClear(game.renderer);
 
-		game := Grab(game);
-
-		DrawCharacter(game.renderer, game.c);
 		DrawGems(game.renderer, game.gems);
+		DrawCharacter(game.renderer, game.c);
 
 		SDL_RenderPresent(game.renderer);
 		SDL_Delay(20);
