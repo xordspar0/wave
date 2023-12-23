@@ -175,13 +175,30 @@ begin
 	end;
 end;
 
+procedure ScoreGame(game : Gamestate);
+var
+	i : Smallint;
+	sum : Integer = 0;
+begin
+	Writeln('Game over!');
+	Writeln('BEGIN TRANSACTION;');
+	Writeln('INSERT INTO games VALUES ();');
+
+	for i := Low(game.loot) to game.lootNum - 1 do
+	begin
+		sum := sum + game.loot[i].hue;
+
+		Writeln('INSERT INTO scores (score, game_id) VALUES (', game.loot[i].hue, ', 1);');
+	end;
+	Writeln('COMMIT;');
+
+	Writeln('Score: ', sum);
+end;
+
 procedure Gameloop(game : Gamestate);
 var
 	phase : (running, score, quit) = running;
 	event : TSDL_Event;
-
-	i : Smallint;
-	sum : Integer = 0;
 begin
 	while phase <> quit do
 	begin
@@ -212,13 +229,7 @@ begin
 
 		score:
 		begin
-			for i := Low(game.loot) to game.lootNum do
-			begin
-				sum := sum + game.loot[i].hue;
-			end;
-
-			Writeln('Game over!');
-			Writeln('Score: ', sum);
+			ScoreGame(game);
 
 			phase := quit;
 		end;
