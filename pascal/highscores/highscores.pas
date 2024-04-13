@@ -1,4 +1,8 @@
-uses sdl2, sysutils;
+uses
+	sdl2,
+	sqldb,
+	sqlite3conn,
+	sysutils;
 
 type
 	Character = record
@@ -175,24 +179,53 @@ begin
 	end;
 end;
 
-procedure ScoreGame(game : Gamestate);
+function ScoreGame(game : Gamestate) : Integer;
 var
-	i : Smallint;
-	sum : Integer = 0;
+	conn   : TSQLite3Connection;
+	t      : TSQLTransaction;
+	q      : TSQLQuery;
+	i      : Smallint = 0;
+	sum    : Integer = 0;
+	gameId : Integer = 0;
 begin
-	Writeln('Game over!');
-	Writeln('BEGIN TRANSACTION;');
-	Writeln('INSERT INTO games VALUES ();');
+	conn := TSQLite3Connection.Create(nil);
+	conn.DatabaseName := 'scores.db';
+	t := TSQLTransaction.Create(conn);
+	conn.Transaction := t;
+	conn.Open;
+
+	t.StartTransaction;
+	conn.ExecuteDirect('CREATE TABLE if not exists games (id integer primary key, sum integer);');
+	conn.ExecuteDirect('CREATE TABLE if not exists scores (score integer, game_id integer, foreign key (game_id) references games(id));');
+	t.Commit;
+
+	t.StartTransaction;
 
 	for i := Low(game.loot) to game.lootNum - 1 do
 	begin
 		sum := sum + game.loot[i].hue;
-
-		Writeln('INSERT INTO scores (score, game_id) VALUES (', game.loot[i].hue, ', 1);');
 	end;
-	Writeln('COMMIT;');
 
-	Writeln('Score: ', sum);
+	q := TSQLQuery.Create(nil);
+	q.Database := conn;
+	q.Transaction := t;
+	q.SQL.Text := 'INSERT INTO games (sum) VALUES (:sum) RETURNING id;';
+	q.Params.ParamByName('sum').AsInteger := sum;
+	q.Open;
+	gameId := q.FieldByName('id').AsInteger;
+	q.Close;
+
+	for i := Low(game.loot) to game.lootNum - 1 do
+	begin
+		q.SQL.Text := 'INSERT INTO scores (score, game_id) VALUES (:score, :game_id);';
+		q.Params.ParamByName('score').AsInteger := game.loot[i].hue;
+		q.Params.ParamByName('game_id').AsInteger := gameId;
+		q.ExecSQL;
+	end;
+
+	t.Commit;
+
+	ScoreGame := sum;
 end;
 
 procedure Gameloop(game : Gamestate);
@@ -229,7 +262,8 @@ begin
 
 		score:
 		begin
-			ScoreGame(game);
+			Writeln('Game over!');
+			Writeln('Score: ', ScoreGame(game));
 
 			phase := quit;
 		end;
