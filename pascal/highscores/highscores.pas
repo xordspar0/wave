@@ -195,7 +195,7 @@ begin
 	conn.Open;
 
 	t.StartTransaction;
-	conn.ExecuteDirect('CREATE TABLE if not exists games (id integer primary key, sum integer);');
+	conn.ExecuteDirect('CREATE TABLE if not exists games (id integer primary key, sum integer, date timestamp DEFAULT CURRENT_TIMESTAMP);');
 	conn.ExecuteDirect('CREATE TABLE if not exists scores (score integer, game_id integer, foreign key (game_id) references games(id));');
 	t.Commit;
 
