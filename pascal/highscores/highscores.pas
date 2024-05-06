@@ -2,7 +2,9 @@ uses
 	sdl2,
 	sqldb,
 	sqlite3conn,
-	sysutils;
+	sysutils,
+
+	log;
 
 type
 	Character = record
@@ -20,6 +22,7 @@ type
 	end;
 
 	Gamestate = record
+		logger   : Logger;
 		window   : PSDL_Window;
 		renderer : PSDL_Renderer;
 		c        : Character;
@@ -78,11 +81,29 @@ function Init() : Gamestate;
 var
 	game : Gamestate;
 begin
+	game.logger := NewLogger();
+
+	case GetEnvironmentVariable('LOG_LEVEL') of
+	'ERROR':
+		 game.logger.level := error;
+	'INFO':
+		 game.logger.level := info;
+	'DEBUG':
+		 game.logger.level := debug;
+	end;
+
 	game.window := Nil;
 	game.renderer := Nil;
 
-	SDL_Init(SDL_INIT_VIDEO);
-	SDL_CreateWindowAndRenderer(640, 480, 0, @game.window, @game.renderer);
+	if SDL_Init(SDL_INIT_VIDEO) < 0 then
+	begin
+		LogError(game.logger, SDL_GetError());
+	end;
+
+	if SDL_CreateWindowAndRenderer(640, 480, 0, @game.window, @game.renderer) < 0 then
+	begin
+		LogError(game.logger, SDL_GetError());
+	end;
 
 	Init := game;
 end;
@@ -180,6 +201,13 @@ begin
 end;
 
 function ScoreGame(game : Gamestate) : Integer;
+const
+	createTableGames = 'CREATE TABLE if not exists games (' +
+			'id integer primary key, sum integer, date timestamp DEFAULT CURRENT_TIMESTAMP' +
+		');';
+	createTableScores = 'CREATE TABLE if not exists scores (' +
+			'score integer, game_id integer, foreign key (game_id) references games(id)' +
+		');';
 var
 	conn   : TSQLite3Connection;
 	t      : TSQLTransaction;
@@ -195,8 +223,10 @@ begin
 	conn.Open;
 
 	t.StartTransaction;
-	conn.ExecuteDirect('CREATE TABLE if not exists games (id integer primary key, sum integer, date timestamp DEFAULT CURRENT_TIMESTAMP);');
-	conn.ExecuteDirect('CREATE TABLE if not exists scores (score integer, game_id integer, foreign key (game_id) references games(id));');
+	LogDebug(game.logger, createTableGames);
+	conn.ExecuteDirect(createTableGames);
+	LogDebug(game.logger, createTableScores);
+	conn.ExecuteDirect(createTableScores);
 	t.Commit;
 
 	t.StartTransaction;
@@ -211,6 +241,7 @@ begin
 	q.Transaction := t;
 	q.SQL.Text := 'INSERT INTO games (sum) VALUES (:sum) RETURNING id;';
 	q.Params.ParamByName('sum').AsInteger := sum;
+	LogDebug(game.logger, q.SQL.Text);
 	q.Open;
 	gameId := q.FieldByName('id').AsInteger;
 	q.Close;
@@ -220,6 +251,7 @@ begin
 		q.SQL.Text := 'INSERT INTO scores (score, game_id) VALUES (:score, :game_id);';
 		q.Params.ParamByName('score').AsInteger := game.loot[i].hue;
 		q.Params.ParamByName('game_id').AsInteger := gameId;
+		LogDebug(game.logger, q.SQL.Text);
 		q.ExecSQL;
 	end;
 
@@ -228,7 +260,7 @@ begin
 	ScoreGame := sum;
 end;
 
-procedure Gameloop(game : Gamestate);
+procedure GameLoop(game : Gamestate);
 var
 	phase : (running, score, quit) = running;
 	event : TSDL_Event;
@@ -285,6 +317,6 @@ var
 	game : Gamestate;
 begin
 	game := Init();
-	game := Gamesetup(game);
-	Gameloop(game);
+	game := GameSetup(game);
+	GameLoop(game);
 end.

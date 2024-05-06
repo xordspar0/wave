@@ -1,3 +1,7 @@
 # build files
-sdltest
-sdltest.o
+highscores
+*.o
+*.ppu
+
+# runtime files
+scores.db
