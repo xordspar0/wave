@@ -2,6 +2,7 @@
 highscores
 *.o
 *.ppu
+*.res
 
 # runtime files
 scores.db
