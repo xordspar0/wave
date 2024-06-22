@@ -3,9 +3,9 @@ unit running;
 interface
 
 uses
-	gametypes;
+	game;
 
-function RunningUpdate(var game : GameState) : GamePhase;
+function RunningUpdate(var state : game.State) : game.Phase;
 
 implementation
 
@@ -14,25 +14,25 @@ uses
 	
 	color;
 
-function Grab(game : Gamestate) : Gamestate;
+function Grab(state : game.State) : game.State;
 var
 	i : Smallint;
 begin
-	for i := Low(game.gems) to High(game.gems) do
-	with game.gems[i] do
+	for i := Low(state.gems) to High(state.gems) do
+	with state.gems[i] do
 	begin
-		if visible and (x = game.c.x) and (y = game.c.y) then
+		if visible and (x = state.c.x) and (y = state.c.y) then
 		begin
-			if game.lootNum <= High(game.loot) then
+			if state.lootNum <= High(state.loot) then
 			begin
-				game.loot[game.lootNum] := game.gems[i];
-				game.lootNum := game.lootNum + 1;
-				game.gems[i].visible := false;
+				state.loot[state.lootNum] := state.gems[i];
+				state.lootNum := state.lootNum + 1;
+				state.gems[i].visible := false;
 			end;
 		end;
 	end;
 
-	Grab := game;
+	Grab := state;
 end;
 
 procedure DrawCharacter(r : PSDL_Renderer; c : Character);
@@ -77,11 +77,11 @@ begin
 	end;
 end;
 
-function RunningUpdate(var game : GameState) : GamePhase;
+function RunningUpdate(var state : game.State) : game.Phase;
 var
 	event : TSDL_Event;
 begin
-	RunningUpdate := GamePhase.running;
+	RunningUpdate := game.Phase.running;
 
 	while SDL_PollEvent(@event) = 1 do
 	begin
@@ -90,26 +90,26 @@ begin
 		SDL_KEYDOWN:
 			if event.key.repeat_ = 0 then
 			case event.key.keysym.sym of
-			SDLK_UP:		game.c.y -= 10;
-			SDLK_DOWN:	game.c.y += 10;
-			SDLK_LEFT:	game.c.x -= 10;
-			SDLK_RIGHT: game.c.x += 10;
+			SDLK_UP:		state.c.y -= 10;
+			SDLK_DOWN:	state.c.y += 10;
+			SDLK_LEFT:	state.c.x -= 10;
+			SDLK_RIGHT: state.c.x += 10;
 			end;
 		end;
 	end;
 
-	game := Grab(game);
+	state := Grab(state);
 
-	if game.lootNum = 5 then
+	if state.lootNum = 5 then
 		RunningUpdate := score;
 
-	SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 0);
-	SDL_RenderClear(game.renderer);
+	SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
+	SDL_RenderClear(state.renderer);
 
-	DrawGems(game.renderer, game.gems);
-	DrawCharacter(game.renderer, game.c);
+	DrawGems(state.renderer, state.gems);
+	DrawCharacter(state.renderer, state.c);
 
-	SDL_RenderPresent(game.renderer);
+	SDL_RenderPresent(state.renderer);
 end;
 
 end.

@@ -6,69 +6,38 @@ uses
 
 	log,
 	running,
-	gametypes;
+	game;
 
-function Init() : Gamestate;
-var
-	game : Gamestate;
+function Init(state : game.State) : game.State;
 begin
-	game.logger := NewLogger();
+	state.logger := NewLogger();
 
 	case GetEnvironmentVariable('LOG_LEVEL') of
 	'ERROR':
-		 game.logger.level := error;
+		 state.logger.level := error;
 	'INFO':
-		 game.logger.level := info;
+		 state.logger.level := info;
 	'DEBUG':
-		 game.logger.level := debug;
+		 state.logger.level := debug;
 	end;
 
-	game.window := Nil;
-	game.renderer := Nil;
+	state.window := Nil;
+	state.renderer := Nil;
 
 	if SDL_Init(SDL_INIT_VIDEO) < 0 then
 	begin
-		LogError(game.logger, SDL_GetError());
+		LogError(state.logger, SDL_GetError());
 	end;
 
-	if SDL_CreateWindowAndRenderer(640, 480, 0, @game.window, @game.renderer) < 0 then
+	if SDL_CreateWindowAndRenderer(640, 480, 0, @state.window, @state.renderer) < 0 then
 	begin
-		LogError(game.logger, SDL_GetError());
+		LogError(state.logger, SDL_GetError());
 	end;
 
-	Init := game;
+	Init := state;
 end;
 
-function GameSetup(game : Gamestate) : Gamestate;
-var
-	i : Smallint;
-begin
-	game.c.x := 0;
-	game.c.y := 0;
-
-	for i := Low(game.gems) to High(game.gems) div 2 do
-	with game.gems[i] do
-	begin
-		x := i * 10 + 20;
-		y := 30;
-		hue := i * 25;
-		visible := true;
-	end;
-	for i := High(game.gems) div 2 + 1 to High(game.gems) do
-	with game.gems[i] do
-	begin
-		x := (i - (High(game.gems) div 2 + 1)) * 10 + 20;
-		y := 40;
-		hue := Random(256);
-		visible := true;
-	end;
-
-	game.lootNum := 0;
-
-	GameSetup := game;
-end;
-
-function ScoreGame(game : Gamestate) : Integer;
+function ScoreGame(state : game.State) : Integer;
 const
 	createTableGames = 'CREATE TABLE if not exists games (' +
 			'id integer primary key, sum integer, date timestamp DEFAULT CURRENT_TIMESTAMP' +
@@ -91,17 +60,17 @@ begin
 	conn.Open;
 
 	t.StartTransaction;
-	LogDebug(game.logger, createTableGames);
+	LogDebug(state.logger, createTableGames);
 	conn.ExecuteDirect(createTableGames);
-	LogDebug(game.logger, createTableScores);
+	LogDebug(state.logger, createTableScores);
 	conn.ExecuteDirect(createTableScores);
 	t.Commit;
 
 	t.StartTransaction;
 
-	for i := Low(game.loot) to game.lootNum - 1 do
+	for i := Low(state.loot) to state.lootNum - 1 do
 	begin
-		sum := sum + game.loot[i].hue;
+		sum := sum + state.loot[i].hue;
 	end;
 
 	q := TSQLQuery.Create(nil);
@@ -109,17 +78,17 @@ begin
 	q.Transaction := t;
 	q.SQL.Text := 'INSERT INTO games (sum) VALUES (:sum) RETURNING id;';
 	q.Params.ParamByName('sum').AsInteger := sum;
-	LogDebug(game.logger, q.SQL.Text);
+	LogDebug(state.logger, q.SQL.Text);
 	q.Open;
 	gameId := q.FieldByName('id').AsInteger;
 	q.Close;
 
-	for i := Low(game.loot) to game.lootNum - 1 do
+	for i := Low(state.loot) to state.lootNum - 1 do
 	begin
 		q.SQL.Text := 'INSERT INTO scores (score, game_id) VALUES (:score, :game_id);';
-		q.Params.ParamByName('score').AsInteger := game.loot[i].hue;
+		q.Params.ParamByName('score').AsInteger := state.loot[i].hue;
 		q.Params.ParamByName('game_id').AsInteger := gameId;
-		LogDebug(game.logger, q.SQL.Text);
+		LogDebug(state.logger, q.SQL.Text);
 		q.ExecSQL;
 	end;
 
@@ -128,23 +97,23 @@ begin
 	ScoreGame := sum;
 end;
 
-procedure GameLoop(game : Gamestate);
+procedure GameLoop(state : game.State);
 var
-	phase : GamePhase = GamePhase.running;
+	phase : game.Phase = game.Phase.running;
 begin
-	while phase <> GamePhase.quit do
+	while phase <> game.Phase.quit do
 	begin
 
 		case phase of
-		GamePhase.running:
+		game.Phase.running:
 		begin
-			phase := RunningUpdate(game);
+			phase := RunningUpdate(state);
 		end;
 
-		GamePhase.score:
+		game.Phase.score:
 		begin
 			Writeln('Game over!');
-			Writeln('Score: ', ScoreGame(game));
+			Writeln('Score: ', ScoreGame(state));
 
 			phase := quit;
 		end;
@@ -156,9 +125,9 @@ begin
 end;
 
 var
-	game : Gamestate;
+	state : game.State;
 begin
-	game := Init();
-	game := GameSetup(game);
-	GameLoop(game);
+	state := game.New();
+	state := Init(state);
+	GameLoop(state);
 end.
