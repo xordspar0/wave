@@ -28,7 +28,7 @@ type
 		lootNum  : Smallint;
 	end;
 
-	Phase = (running, score, quit);
+	Phase = (mainmenu, running, score, quit);
 
 function New() : State;
 

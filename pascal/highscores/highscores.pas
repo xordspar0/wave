@@ -6,6 +6,7 @@ uses
 
 	game,
 	log,
+	mainmenu,
 	running;
 
 function Init(state : game.State) : game.State;
@@ -99,15 +100,23 @@ end;
 
 procedure GameLoop(state : game.State);
 var
-	phase : game.Phase = game.Phase.running;
+	phase     : game.Phase = game.Phase.mainmenu;
+	menuState : mainmenu.State;
 begin
+	menuState.renderer := state.renderer;
+
 	while phase <> game.Phase.quit do
 	begin
-
 		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
 		SDL_RenderClear(state.renderer);
 
 		case phase of
+		game.Phase.mainmenu:
+		begin
+			phase := MainMenu.Update(menuState);
+			MainMenu.Draw(menuState);
+		end;
+
 		game.Phase.running:
 		begin
 			phase := Running.Update(state);
