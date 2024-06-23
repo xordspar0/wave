@@ -4,9 +4,9 @@ uses
 	sqlite3conn,
 	sysutils,
 
+	game,
 	log,
-	running,
-	game;
+	running;
 
 function Init(state : game.State) : game.State;
 begin
@@ -104,10 +104,14 @@ begin
 	while phase <> game.Phase.quit do
 	begin
 
+		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
+		SDL_RenderClear(state.renderer);
+
 		case phase of
 		game.Phase.running:
 		begin
-			phase := RunningUpdate(state);
+			phase := Running.Update(state);
+			Running.Draw(state);
 		end;
 
 		game.Phase.score:
@@ -120,6 +124,7 @@ begin
 
 		end;
 
+		SDL_RenderPresent(state.renderer);
 		SDL_Delay(20);
 	end;
 end;

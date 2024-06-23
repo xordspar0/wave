@@ -5,7 +5,8 @@ interface
 uses
 	game;
 
-function RunningUpdate(var state : game.State) : game.Phase;
+function Update(var state : game.State) : game.Phase;
+procedure Draw(state : game.State);
 
 implementation
 
@@ -77,16 +78,16 @@ begin
 	end;
 end;
 
-function RunningUpdate(var state : game.State) : game.Phase;
+function Update(var state : game.State) : game.Phase;
 var
 	event : TSDL_Event;
 begin
-	RunningUpdate := game.Phase.running;
+	Update := game.Phase.running;
 
 	while SDL_PollEvent(@event) = 1 do
 	begin
 		case event.type_ of
-		SDL_QUITEV: RunningUpdate := quit;
+		SDL_QUITEV: Update := quit;
 		SDL_KEYDOWN:
 			if event.key.repeat_ = 0 then
 			case event.key.keysym.sym of
@@ -101,15 +102,13 @@ begin
 	state := Grab(state);
 
 	if state.lootNum = 5 then
-		RunningUpdate := score;
+		Update := score;
+end;
 
-	SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
-	SDL_RenderClear(state.renderer);
-
+procedure Draw(state : game.State);
+begin
 	DrawGems(state.renderer, state.gems);
 	DrawCharacter(state.renderer, state.c);
-
-	SDL_RenderPresent(state.renderer);
 end;
 
 end.
