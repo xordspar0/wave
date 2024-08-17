@@ -1,4 +1,6 @@
 uses
+	ctypes,
+
 	sdl2,
 	sqldb,
 	sqlite3conn,
@@ -9,7 +11,26 @@ uses
 	mainmenu,
 	running;
 
-function Init(state : game.State) : game.State;
+procedure MouseButtonDown(var state : game.State; button : Integer; x, y : Integer);
+begin
+	state.c.x := 0;
+end;
+
+function ReceivedEvent(userdata : Pointer; event : PSDL_Event) : cint; cdecl;
+var
+	state : ^game.State;
+begin
+	state := userdata;
+
+	case event^.type_ of
+	SDL_MOUSEBUTTONDOWN:
+		MouseButtonDown(state^, event^.button.button, event^.button.x, event^.button.y);
+	end;
+
+	ReceivedEvent := 1;
+end;
+
+procedure Init(var state : game.State);
 begin
 	state.logger := NewLogger();
 
@@ -35,7 +56,7 @@ begin
 		LogError(state.logger, SDL_GetError());
 	end;
 
-	Init := state;
+	SDL_AddEventWatch(@ReceivedEvent, @state);
 end;
 
 function ScoreGame(state : game.State) : Integer;
@@ -98,7 +119,7 @@ begin
 	ScoreGame := sum;
 end;
 
-procedure GameLoop(state : game.State);
+procedure GameLoop(var state : game.State);
 var
 	phase     : game.Phase = game.Phase.mainmenu;
 	menuState : mainmenu.State;
@@ -142,6 +163,6 @@ var
 	state : game.State;
 begin
 	state := game.New();
-	state := Init(state);
+	Init(state);
 	GameLoop(state);
 end.
