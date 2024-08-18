@@ -124,7 +124,7 @@ var
 	phase     : game.Phase = game.Phase.mainmenu;
 	menuState : mainmenu.State;
 begin
-	menuState.renderer := state.renderer;
+	menuState := mainmenu.New(state.renderer);
 
 	while phase <> game.Phase.quit do
 	begin
