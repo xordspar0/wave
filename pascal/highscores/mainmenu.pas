@@ -42,6 +42,7 @@ begin
 		buttonWidth - buttonPadding * 2,
 		buttonHeight - buttonPadding * 2
 	);
+	SDL_SetTextureBlendMode(New.textBuffer, SDL_BLENDMODE_BLEND);
 	New.textRenderer := text.New(renderer);
 end;
 
@@ -93,16 +94,15 @@ begin
 			h := buttonRect.h - buttonPadding * 2;
 		end;
 
-		SDL_SetRenderDrawColor(state.renderer, 150, 150, 150, 0);
+		SDL_SetRenderDrawColor(state.renderer, 120, 120, 120, 0);
 		SDL_RenderFillRect(state.renderer, @buttonRect);
 
 		SDL_SetRenderTarget(state.renderer, state.textBuffer);
 		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
 		SDL_RenderClear(state.renderer);
-		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 0);
+		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
 		RenderText(state.renderer, state.textRenderer, labels[i]);
 
-		{ TODO: Respect transparency in the text buffer when copying to the screen. }
 		SDL_SetRenderTarget(state.renderer, Nil);
 		SDL_RenderCopy(state.renderer, state.textBuffer, Nil, @textRect);
 	end;
