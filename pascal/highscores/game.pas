@@ -19,16 +19,11 @@ type
 	end;
 
 	State = record
-		logger   : Logger;
-		window   : PSDL_Window;
-		renderer : PSDL_Renderer;
 		c        : Character;
 		gems     : Array [0..19] of Gem;
 		loot     : Array [0..4] of Gem;
 		lootNum  : Smallint;
 	end;
-
-	Phase = (mainmenu, running, score, quit);
 
 function New() : State;
 

@@ -9,16 +9,18 @@ uses
 	game,
 	log,
 	mainmenu,
-	running;
+	phases,
+	running,
+	states;
 
-procedure MouseButtonDown(var state : game.State; button : Integer; x, y : Integer);
+procedure MouseButtonDown(var state : states.State; button : Integer; x, y : Integer);
 begin
-	state.c.x := 0;
+	state.game.c.x := 0;
 end;
 
 function ReceivedEvent(userdata : Pointer; event : PSDL_Event) : cint; cdecl;
 var
-	state : ^game.State;
+	state : ^states.State;
 begin
 	state := userdata;
 
@@ -30,9 +32,9 @@ begin
 	ReceivedEvent := 1;
 end;
 
-procedure Init(var state : game.State);
+procedure Init(var state : states.State);
 begin
-	state.logger := NewLogger();
+	state.logger := log.NewLogger();
 
 	case GetEnvironmentVariable('LOG_LEVEL') of
 	'ERROR':
@@ -59,7 +61,7 @@ begin
 	SDL_AddEventWatch(@ReceivedEvent, @state);
 end;
 
-function ScoreGame(state : game.State) : Integer;
+function ScoreGame(state : states.State) : Integer;
 const
 	createTableGames = 'CREATE TABLE if not exists games (' +
 			'id integer primary key, sum integer, date timestamp DEFAULT CURRENT_TIMESTAMP' +
@@ -90,9 +92,9 @@ begin
 
 	t.StartTransaction;
 
-	for i := Low(state.loot) to state.lootNum - 1 do
+	for i := Low(state.game.loot) to state.game.lootNum - 1 do
 	begin
-		sum := sum + state.loot[i].hue;
+		sum := sum + state.game.loot[i].hue;
 	end;
 
 	q := TSQLQuery.Create(nil);
@@ -105,10 +107,10 @@ begin
 	gameId := q.FieldByName('id').AsInteger;
 	q.Close;
 
-	for i := Low(state.loot) to state.lootNum - 1 do
+	for i := Low(state.game.loot) to state.game.lootNum - 1 do
 	begin
 		q.SQL.Text := 'INSERT INTO scores (score, game_id) VALUES (:score, :game_id);';
-		q.Params.ParamByName('score').AsInteger := state.loot[i].hue;
+		q.Params.ParamByName('score').AsInteger := state.game.loot[i].hue;
 		q.Params.ParamByName('game_id').AsInteger := gameId;
 		LogDebug(state.logger, q.SQL.Text);
 		q.ExecSQL;
@@ -119,37 +121,32 @@ begin
 	ScoreGame := sum;
 end;
 
-procedure GameLoop(var state : game.State);
-var
-	phase     : game.Phase = game.Phase.mainmenu;
-	menuState : mainmenu.State;
+procedure GameLoop(var state : states.State);
 begin
-	menuState := mainmenu.New(state.renderer);
-
-	while phase <> game.Phase.quit do
+	while state.phase <> phases.Phase.quit do
 	begin
 		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
 		SDL_RenderClear(state.renderer);
 
-		case phase of
-		game.Phase.mainmenu:
+		case state.phase of
+		phases.Phase.mainmenu:
 		begin
-			phase := MainMenu.Update(menuState);
-			MainMenu.Draw(menuState);
+			state.phase := MainMenu.Update(state.menu);
+			MainMenu.Draw(state.menu);
 		end;
 
-		game.Phase.running:
+		phases.Phase.running:
 		begin
-			phase := Running.Update(state);
-			Running.Draw(state);
+			state.phase := Running.Update(state.game);
+			Running.Draw(state.renderer, state.game);
 		end;
 
-		game.Phase.score:
+		phases.Phase.score:
 		begin
 			Writeln('Game over!');
 			Writeln('Score: ', ScoreGame(state));
 
-			phase := quit;
+			state.phase := quit;
 		end;
 
 		end;
@@ -160,9 +157,11 @@ begin
 end;
 
 var
-	state : game.State;
+	s : states.State;
 begin
-	state := game.New();
-	Init(state);
-	GameLoop(state);
+	Init(s);
+	s.game := game.New();
+	s.menu := mainMenu.New(s.renderer);
+	s.phase := phases.Phase.mainMenu;
+	GameLoop(s);
 end.

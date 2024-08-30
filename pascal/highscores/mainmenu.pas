@@ -6,6 +6,7 @@ uses
 	sdl2,
 	
 	game,
+	phases,
 	text;
 
 type
@@ -17,7 +18,7 @@ type
 	end;
 
 function New(renderer : PSDL_Renderer) : mainmenu.State;
-function Update(var state : mainmenu.State) : game.Phase;
+function Update(var state : mainmenu.State) : phases.Phase;
 procedure Draw(state : mainmenu.State);
 
 implementation
@@ -46,11 +47,11 @@ begin
 	New.textRenderer := text.New(renderer);
 end;
 
-function Update(var state : mainmenu.State) : game.Phase;
+function Update(var state : mainmenu.State) : phases.Phase;
 var
 	event : TSDL_Event;
 begin
-	Update := game.Phase.mainmenu;
+	Update := phases.Phase.mainmenu;
 
 	while SDL_PollEvent(@event) = 1 do
 	begin
