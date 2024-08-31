@@ -13,20 +13,18 @@ uses
 	running,
 	states;
 
-procedure MouseButtonDown(var state : states.State; button : Integer; x, y : Integer);
-begin
-	state.game.c.x := 0;
-end;
-
 function ReceivedEvent(userdata : Pointer; event : PSDL_Event) : cint; cdecl;
 var
 	state : ^states.State;
 begin
 	state := userdata;
 
-	case event^.type_ of
-	SDL_MOUSEBUTTONDOWN:
-		MouseButtonDown(state^, event^.button.button, event^.button.x, event^.button.y);
+	case state^.phase of
+	phases.Phase.mainMenu:
+		case event^.type_ of
+		SDL_MOUSEBUTTONDOWN:
+			state^.phase := mainMenu.MouseButtonDown(state^.menu, event^.button.button, event^.button.x, event^.button.y);
+		end;
 	end;
 
 	ReceivedEvent := 1;
@@ -161,7 +159,7 @@ var
 begin
 	Init(s);
 	s.game := game.New();
-	s.menu := mainMenu.New(s.renderer);
+	s.menu := mainMenu.New(s.renderer, ['NEW GAME', 'HIGH SCORES'] );
 	s.phase := phases.Phase.mainMenu;
 	GameLoop(s);
 end.
