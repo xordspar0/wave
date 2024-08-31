@@ -13,23 +13,6 @@ uses
 	running,
 	states;
 
-function ReceivedEvent(userdata : Pointer; event : PSDL_Event) : cint; cdecl;
-var
-	state : ^states.State;
-begin
-	state := userdata;
-
-	case state^.phase of
-	phases.Phase.mainMenu:
-		case event^.type_ of
-		SDL_MOUSEBUTTONDOWN:
-			state^.phase := mainMenu.MouseButtonDown(state^.menu, event^.button.button, event^.button.x, event^.button.y);
-		end;
-	end;
-
-	ReceivedEvent := 1;
-end;
-
 procedure Init(var state : states.State);
 begin
 	state.logger := log.NewLogger();
@@ -55,8 +38,6 @@ begin
 	begin
 		LogError(state.logger, SDL_GetError());
 	end;
-
-	SDL_AddEventWatch(@ReceivedEvent, @state);
 end;
 
 function ScoreGame(state : states.State) : Integer;
@@ -120,11 +101,33 @@ begin
 end;
 
 procedure GameLoop(var state : states.State);
+var
+	event : TSDL_Event;
 begin
 	while state.phase <> phases.Phase.quit do
 	begin
 		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
 		SDL_RenderClear(state.renderer);
+
+		while SDL_PollEvent(@event) = 1 do
+		begin
+			case event.type_ of
+				SDL_QUITEV: state.phase := quit;
+				SDL_KEYDOWN:
+					if event.key.repeat_ = 0 then
+					case state.phase of
+						phases.Phase.mainmenu:
+							MainMenu.KeyDown(state.menu, event.key.keysym.sym);
+						phases.Phase.running:
+							Running.KeyDown(state.game, event.key.keysym.sym);
+					end;
+				SDL_MOUSEBUTTONDOWN:
+					case state.phase of
+						phases.Phase.mainmenu:
+							mainMenu.MouseButtonDown(state.menu, event.button.button, event.button.x, event.button.y);
+					end;
+			end;
+		end;
 
 		case state.phase of
 		phases.Phase.mainmenu:

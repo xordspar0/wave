@@ -12,6 +12,8 @@ uses
 function Update(var state : game.State) : phases.Phase;
 procedure Draw(renderer : PSDL_Renderer; state : game.State);
 
+procedure KeyDown(var state : game.State; key : TSDL_Keycode);
+
 implementation
 
 uses
@@ -81,25 +83,8 @@ begin
 end;
 
 function Update(var state : game.State) : phases.Phase;
-var
-	event : TSDL_Event;
 begin
 	Update := phases.Phase.running;
-
-	while SDL_PollEvent(@event) = 1 do
-	begin
-		case event.type_ of
-		SDL_QUITEV: Update := quit;
-		SDL_KEYDOWN:
-			if event.key.repeat_ = 0 then
-			case event.key.keysym.sym of
-			SDLK_UP:		state.c.y -= 10;
-			SDLK_DOWN:	state.c.y += 10;
-			SDLK_LEFT:	state.c.x -= 10;
-			SDLK_RIGHT: state.c.x += 10;
-			end;
-		end;
-	end;
 
 	state := Grab(state);
 
@@ -111,6 +96,16 @@ procedure Draw(renderer : PSDL_Renderer; state : game.State);
 begin
 	DrawGems(renderer, state.gems);
 	DrawCharacter(renderer, state.c);
+end;
+
+procedure KeyDown(var state : game.State; key : TSDL_Keycode);
+begin
+	case key of
+		SDLK_UP:		state.c.y -= 10;
+		SDLK_DOWN:	state.c.y += 10;
+		SDLK_LEFT:	state.c.x -= 10;
+		SDLK_RIGHT: state.c.x += 10;
+	end;
 end;
 
 end.

@@ -18,6 +18,7 @@ type
 	State = record
 		renderer     : PSDL_Renderer;
 		selected     : Smallint;
+		accepted     : Boolean;
 		textBuffer   : PSDL_Texture;
 		textRenderer : text.State;
 		buttons      : array[0..1] of Button;
@@ -27,7 +28,8 @@ function New(renderer : PSDL_Renderer; labels : array of string) : mainmenu.Stat
 function Update(var state : mainmenu.State) : phases.Phase;
 procedure Draw(state : mainmenu.State);
 
-function MouseButtonDown(var state : mainmenu.State; _ : Integer; x, y : Integer) : phases.Phase;
+procedure KeyDown(var state : mainmenu.State; key : TSDL_Keycode);
+procedure MouseButtonDown(var state : mainmenu.State; _ : Integer; x, y : Integer);
 
 implementation
 
@@ -46,6 +48,8 @@ var
 begin
 	New.renderer := renderer;
 	New.selected := 0;
+	New.accepted := False;
+
 	New.textBuffer := SDL_CreateTexture(
 		renderer,
 		SDL_PIXELFORMAT_RGBA32,
@@ -70,25 +74,15 @@ begin
 end;
 
 function Update(var state : mainmenu.State) : phases.Phase;
-var
-	event : TSDL_Event;
 begin
 	Update := phases.Phase.mainmenu;
 
-	while SDL_PollEvent(@event) = 1 do
-	begin
-		case event.type_ of
-		SDL_QUITEV: Update := quit;
-		SDL_KEYDOWN:
-			if event.key.repeat_ = 0 then
-			case event.key.keysym.sym of
-			SDLK_UP:		 state.selected -= 1;
-			SDLK_DOWN:	 state.selected += 1;
-			SDLK_RETURN: Update := running;
-			end;
-		end;
+	if state.accepted then
+	case state.buttons[state.selected].text of
+		'NEW GAME': Update := phases.Phase.running;
+	else
+		state.accepted := False;
 	end;
-
 end;
 
 procedure Draw(state : mainmenu.State);
@@ -129,19 +123,29 @@ begin
 	end;
 end;
 
-function MouseButtonDown(var state : mainmenu.State; _ : Integer; x, y : Integer) : phases.Phase;
+procedure KeyDown(var state : mainmenu.State; key : TSDL_Keycode);
+begin
+	case key of
+		SDLK_UP:		 state.selected -= 1;
+		SDLK_DOWN:	 state.selected += 1;
+		SDLK_RETURN: state.accepted := True;
+	end;
+end;
+
+procedure MouseButtonDown(var state : mainmenu.State; _ : Integer; x, y : Integer);
 var
+	i : Integer;
 	b : mainmenu.Button;
 begin
-	for b in state.buttons do
+	for i := Low(state.buttons) to High(state.buttons) do
 	begin
+		b := state.buttons[i];
+
 		if (x > b.x) and (x < b.x + b.w)
 			and (y > b.y) and (y < b.y + b.h) then
-		case b.text of
-		'NEW GAME':
-			begin
-				MouseButtonDown := phases.Phase.running;
-			end;
+		begin
+			state.selected := i;
+			state.accepted := True;
 		end;
 	end;
 end;
