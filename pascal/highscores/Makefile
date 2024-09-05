@@ -2,6 +2,10 @@
 build:
 	fpc -g -Fu'vendor/*' highscores
 
+.PHONY: release
+release:
+	fpc -XX -Fu'vendor/*' highscores
+
 .PHONY: run
 run: build
 	LOG_LEVEL=DEBUG ./highscores
