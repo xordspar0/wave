@@ -12,6 +12,8 @@ uses
 function Update(var state : game.State) : phases.Phase;
 procedure Draw(renderer : PSDL_Renderer; state : game.State);
 
+procedure DrawGem(r : PSDL_Renderer; gem : game.Gem);
+
 procedure KeyDown(var state : game.State; key : TSDL_Keycode);
 
 implementation
@@ -57,28 +59,24 @@ begin
 	SDL_RenderFillRect(r, @rect);
 end;
 
-procedure DrawGems(r : PSDL_Renderer; gems : Array of Gem);
+procedure DrawGem(r : PSDL_Renderer; gem : game.Gem);
 var
-	g	: Gem;
 	rect : TSDL_Rect;
 	color : RGB;
 begin
-	for g in gems do
+	if gem.visible then
 	begin
-		if g.visible then
+		with rect do
 		begin
-			with rect do
-			begin
-				x := g.x + 1;
-				y := g.y + 1;
-				w := 8;
-				h := 8;
-			end;
-
-			color := HueToRGB(g.hue);
-			SDL_SetRenderDrawColor(r, color.r, color.g, color.b, 0);
-			SDL_RenderFillRect(r, @rect);
+			x := gem.x + 1;
+			y := gem.y + 1;
+			w := 8;
+			h := 8;
 		end;
+
+		color := HueToRGB(gem.hue);
+		SDL_SetRenderDrawColor(r, color.r, color.g, color.b, 0);
+		SDL_RenderFillRect(r, @rect);
 	end;
 end;
 
@@ -93,8 +91,13 @@ begin
 end;
 
 procedure Draw(renderer : PSDL_Renderer; state : game.State);
+var
+	gem: game.Gem;
 begin
-	DrawGems(renderer, state.gems);
+	for gem in state.gems do
+	begin
+		DrawGem(renderer, gem);
+	end;
 	DrawCharacter(renderer, state.c);
 end;
 

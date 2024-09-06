@@ -79,7 +79,8 @@ begin
 
 	if state.accepted then
 	case state.buttons[state.selected].text of
-		'NEW GAME': Update := phases.Phase.running;
+		'NEW GAME':    Update := phases.Phase.running;
+		'HIGH SCORES': Update := phases.Phase.scores;
 	else
 		state.accepted := False;
 	end;

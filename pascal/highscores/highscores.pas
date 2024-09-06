@@ -11,6 +11,7 @@ uses
 	mainmenu,
 	phases,
 	running,
+	scores,
 	states;
 
 procedure Init(var state : states.State);
@@ -118,6 +119,8 @@ begin
 					case state.phase of
 						phases.Phase.mainmenu:
 							MainMenu.KeyDown(state.menu, event.key.keysym.sym);
+						phases.Phase.scores:
+							Scores.KeyDown(state.scores, event.key.keysym.sym);
 						phases.Phase.running:
 							Running.KeyDown(state.game, event.key.keysym.sym);
 					end;
@@ -132,13 +135,19 @@ begin
 		case state.phase of
 		phases.Phase.mainmenu:
 		begin
-			state.phase := MainMenu.Update(state.menu);
+			state.phase := mainmenu.Update(state.menu);
 			MainMenu.Draw(state.menu);
+		end;
+
+		phases.Phase.scores:
+		begin
+			state.phase := scores.Update(state.scores);
+			scores.Draw(state.scores);
 		end;
 
 		phases.Phase.running:
 		begin
-			state.phase := Running.Update(state.game);
+			state.phase := running.Update(state.game);
 			Running.Draw(state.renderer, state.game);
 		end;
 
@@ -163,6 +172,7 @@ begin
 	Init(s);
 	s.game := game.New();
 	s.menu := mainMenu.New(s.renderer, ['NEW GAME', 'HIGH SCORES'] );
+	s.scores := scores.New(s.renderer);
 	s.phase := phases.Phase.mainMenu;
 	GameLoop(s);
 end.

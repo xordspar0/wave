@@ -8,7 +8,8 @@ uses
 	game,
 	log,
 	mainMenu,
-	phases;
+	phases,
+	scores;
 
 type 
 	State = record
@@ -18,6 +19,7 @@ type
 		phase    : phases.Phase;
 		game     : game.State;
 		menu     : mainMenu.State;
+		scores   : scores.State;
 	end;
 
 implementation
