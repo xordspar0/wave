@@ -81,9 +81,9 @@ begin
 	case state.buttons[state.selected].text of
 		'NEW GAME':    Update := phases.Phase.running;
 		'HIGH SCORES': Update := phases.Phase.scores;
-	else
-		state.accepted := False;
 	end;
+
+	state.accepted := False;
 end;
 
 procedure Draw(state : mainmenu.State);
