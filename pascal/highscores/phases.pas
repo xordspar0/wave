@@ -3,7 +3,7 @@ unit phases;
 interface
 
 type
-	Phase = (mainmenu, scores, running, score, quit);
+	Phase = (mainmenu, scores, running, quit);
 
 implementation
 

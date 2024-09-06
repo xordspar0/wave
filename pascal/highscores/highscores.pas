@@ -1,13 +1,8 @@
 uses
-	ctypes,
-
 	sdl2,
-	sqldb,
-	sqlite3conn,
 	sysutils,
 
 	game,
-	log,
 	mainmenu,
 	phases,
 	running,
@@ -15,7 +10,6 @@ uses
 
 type
 	ProgramState = record
-		logger   : log.Logger;
 		window   : PSDL_Window;
 		renderer : PSDL_Renderer;
 		phase    : phases.Phase;
@@ -26,89 +20,24 @@ type
 
 procedure Init(var state : ProgramState);
 begin
-	state.logger := log.NewLogger();
-
-	case GetEnvironmentVariable('LOG_LEVEL') of
-	'ERROR':
-		 state.logger.level := error;
-	'INFO':
-		 state.logger.level := info;
-	'DEBUG':
-		 state.logger.level := debug;
-	end;
-
 	state.window := Nil;
 	state.renderer := Nil;
 
+	case GetEnvironmentVariable('LOG_LEVEL') of
+		'ERROR': SDL_LogSetAllPriority(SDL_LOG_PRIORITY_ERROR);
+		'INFO':  SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
+		'DEBUG': SDL_LogSetAllPriority(SDL_LOG_PRIORITY_DEBUG);
+	end;
+
 	if SDL_Init(SDL_INIT_VIDEO) < 0 then
 	begin
-		LogError(state.logger, SDL_GetError());
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, '%s', [SDL_GetError()]);
 	end;
 
 	if SDL_CreateWindowAndRenderer(640, 480, 0, @state.window, @state.renderer) < 0 then
 	begin
-		LogError(state.logger, SDL_GetError());
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, '%s', [SDL_GetError()]);
 	end;
-end;
-
-function ScoreGame(state : ProgramState) : Integer;
-const
-	createTableGames = 'CREATE TABLE if not exists games (' +
-			'id integer primary key, sum integer, date timestamp DEFAULT CURRENT_TIMESTAMP' +
-		');';
-	createTableScores = 'CREATE TABLE if not exists scores (' +
-			'score integer, game_id integer, foreign key (game_id) references games(id)' +
-		');';
-var
-	conn   : TSQLite3Connection;
-	t      : TSQLTransaction;
-	q      : TSQLQuery;
-	i      : Smallint = 0;
-	sum    : Integer = 0;
-	gameId : Integer = 0;
-begin
-	conn := TSQLite3Connection.Create(nil);
-	conn.DatabaseName := 'scores.db';
-	t := TSQLTransaction.Create(conn);
-	conn.Transaction := t;
-	conn.Open;
-
-	t.StartTransaction;
-	LogDebug(state.logger, createTableGames);
-	conn.ExecuteDirect(createTableGames);
-	LogDebug(state.logger, createTableScores);
-	conn.ExecuteDirect(createTableScores);
-	t.Commit;
-
-	t.StartTransaction;
-
-	for i := Low(state.game.loot) to state.game.lootNum - 1 do
-	begin
-		sum := sum + state.game.loot[i].hue;
-	end;
-
-	q := TSQLQuery.Create(nil);
-	q.Database := conn;
-	q.Transaction := t;
-	q.SQL.Text := 'INSERT INTO games (sum) VALUES (:sum) RETURNING id;';
-	q.Params.ParamByName('sum').AsInteger := sum;
-	LogDebug(state.logger, q.SQL.Text);
-	q.Open;
-	gameId := q.FieldByName('id').AsInteger;
-	q.Close;
-
-	for i := Low(state.game.loot) to state.game.lootNum - 1 do
-	begin
-		q.SQL.Text := 'INSERT INTO scores (score, game_id) VALUES (:score, :game_id);';
-		q.Params.ParamByName('score').AsInteger := state.game.loot[i].hue;
-		q.Params.ParamByName('game_id').AsInteger := gameId;
-		LogDebug(state.logger, q.SQL.Text);
-		q.ExecSQL;
-	end;
-
-	t.Commit;
-
-	ScoreGame := sum;
 end;
 
 procedure GameLoop(var state : ProgramState);
@@ -143,32 +72,23 @@ begin
 		end;
 
 		case state.phase of
-		phases.Phase.mainmenu:
-		begin
-			state.phase := mainmenu.Update(state.menu);
-			MainMenu.Draw(state.menu);
-		end;
+			phases.Phase.mainmenu:
+			begin
+				state.phase := mainmenu.Update(state.menu);
+				MainMenu.Draw(state.menu);
+			end;
 
-		phases.Phase.scores:
-		begin
-			state.phase := scores.Update(state.scores);
-			scores.Draw(state.scores);
-		end;
+			phases.Phase.scores:
+			begin
+				state.phase := scores.Update(state.scores);
+				scores.Draw(state.scores);
+			end;
 
-		phases.Phase.running:
-		begin
-			state.phase := running.Update(state.game);
-			Running.Draw(state.renderer, state.game);
-		end;
-
-		phases.Phase.score:
-		begin
-			Writeln('Game over!');
-			Writeln('Score: ', ScoreGame(state));
-
-			state.phase := quit;
-		end;
-
+			phases.Phase.running:
+			begin
+				state.phase := running.Update(state.game);
+				Running.Draw(state.renderer, state.game);
+			end;
 		end;
 
 		SDL_RenderPresent(state.renderer);

@@ -86,7 +86,12 @@ begin
 	state := Grab(state);
 
 	if state.lootNum = 5 then
-		Update := score;
+	begin
+		Writeln('Game over!');
+		Writeln('Score: ', game.ScoreGame(state));
+
+		Update := phases.Phase.quit;
+	end;
 end;
 
 procedure Draw(renderer : PSDL_Renderer; state : game.State);
