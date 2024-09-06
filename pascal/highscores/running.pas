@@ -6,8 +6,7 @@ uses
 	sdl2,
 	
 	game,
-	phases,
-	states;
+	phases;
 
 function Update(var state : game.State) : phases.Phase;
 procedure Draw(renderer : PSDL_Renderer; state : game.State);

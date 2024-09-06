@@ -11,10 +11,20 @@ uses
 	mainmenu,
 	phases,
 	running,
-	scores,
-	states;
+	scores;
 
-procedure Init(var state : states.State);
+type
+	ProgramState = record
+		logger   : log.Logger;
+		window   : PSDL_Window;
+		renderer : PSDL_Renderer;
+		phase    : phases.Phase;
+		game     : game.State;
+		menu     : mainMenu.State;
+		scores   : scores.State;
+	end;
+
+procedure Init(var state : ProgramState);
 begin
 	state.logger := log.NewLogger();
 
@@ -41,7 +51,7 @@ begin
 	end;
 end;
 
-function ScoreGame(state : states.State) : Integer;
+function ScoreGame(state : ProgramState) : Integer;
 const
 	createTableGames = 'CREATE TABLE if not exists games (' +
 			'id integer primary key, sum integer, date timestamp DEFAULT CURRENT_TIMESTAMP' +
@@ -101,7 +111,7 @@ begin
 	ScoreGame := sum;
 end;
 
-procedure GameLoop(var state : states.State);
+procedure GameLoop(var state : ProgramState);
 var
 	event : TSDL_Event;
 begin
@@ -167,12 +177,12 @@ begin
 end;
 
 var
-	s : states.State;
+	state : ProgramState;
 begin
-	Init(s);
-	s.game := game.New();
-	s.menu := mainMenu.New(s.renderer, ['NEW GAME', 'HIGH SCORES'] );
-	s.scores := scores.New(s.renderer);
-	s.phase := phases.Phase.mainMenu;
-	GameLoop(s);
+	Init(state);
+	state.game := game.New();
+	state.menu := mainMenu.New(state.renderer, ['NEW GAME', 'HIGH SCORES'] );
+	state.scores := scores.New(state.renderer);
+	state.phase := phases.Phase.mainMenu;
+	GameLoop(state);
 end.
