@@ -29,6 +29,8 @@ begin
 		'DEBUG': SDL_LogSetAllPriority(SDL_LOG_PRIORITY_DEBUG);
 	end;
 
+	SDL_SetHint(SDL_HINT_RENDER_VSYNC, '1');
+
 	if SDL_Init(SDL_INIT_VIDEO) < 0 then
 	begin
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, '%s', [SDL_GetError()]);
@@ -92,7 +94,6 @@ begin
 		end;
 
 		SDL_RenderPresent(state.renderer);
-		SDL_Delay(20);
 	end;
 end;
 
