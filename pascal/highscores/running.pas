@@ -18,7 +18,9 @@ procedure KeyDown(var state : game.State; key : TSDL_Keycode);
 implementation
 
 uses
-	color;
+	color,
+	gamepersistence,
+	scoredgames;
 
 function Grab(state : game.State) : game.State;
 var
@@ -80,6 +82,8 @@ begin
 end;
 
 function Update(var state : game.State) : phases.Phase;
+var
+	score : scoredgames.ScoredGame;
 begin
 	Update := phases.Phase.running;
 
@@ -87,8 +91,8 @@ begin
 
 	if state.lootNum = 5 then
 	begin
-		Writeln('Game over!');
-		Writeln('Score: ', game.ScoreGame(state));
+		score := game.ScoreGame(state);
+		gamepersistence.PersistScoredGame(score);
 
 		Update := phases.Phase.quit;
 	end;

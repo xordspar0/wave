@@ -2,6 +2,9 @@ unit game;
 
 interface
 
+uses
+	scoredgames;
+
 type
 	Character = record
 		x,y : Smallint;
@@ -21,7 +24,7 @@ type
 	end;
 
 function New() : State;
-function ScoreGame(state : game.State) : Integer;
+function ScoreGame(state : game.State) : scoredgames.ScoredGame;
 
 implementation
 
@@ -60,19 +63,17 @@ begin
 	New := g;
 end;
 
-function ScoreGame(state : game.State) : Integer;
+function ScoreGame(state : game.State) : scoredgames.ScoredGame;
 var
 	i : Integer;
 begin
-	ScoreGame := 0;
+	ScoreGame.sum := 0;
 
-	for i := Low(state.loot) to state.lootNum - 1 do
+	for i := Low(state.loot) to High(state.loot) do
 	begin
-		ScoreGame := ScoreGame + state.loot[i].hue;
+		ScoreGame.gems[i] := state.loot[i].hue;
+		ScoreGame.sum := ScoreGame.sum + state.loot[i].hue;
 	end;
-
-	gamepersistence.PersistScore(state);
 end;
-
 
 end.
