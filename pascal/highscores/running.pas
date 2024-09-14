@@ -19,7 +19,7 @@ implementation
 
 uses
 	color,
-	gamepersistence,
+	scoredgamepersistence,
 	scoredgames;
 
 function Grab(state : game.State) : game.State;
@@ -92,7 +92,7 @@ begin
 	if state.lootNum = 5 then
 	begin
 		score := game.ScoreGame(state);
-		gamepersistence.PersistScoredGame(score);
+		scoredgamepersistence.InsertScoredGame(score);
 
 		Update := phases.Phase.quit;
 	end;

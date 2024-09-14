@@ -2,6 +2,7 @@ uses
 	sdl2,
 	sysutils,
 
+	arenas,
 	game,
 	mainmenu,
 	phases,
@@ -98,12 +99,14 @@ begin
 end;
 
 var
+	a     : arenas.Arena;
 	state : ProgramState;
 begin
+	a := arenas.New(4096);
 	Init(state);
 	state.game := game.New();
 	state.menu := mainMenu.New(state.renderer, ['NEW GAME', 'HIGH SCORES'] );
-	state.scores := scores.New(state.renderer);
+	state.scores := scores.New(a, state.renderer);
 	state.phase := phases.Phase.mainMenu;
 	GameLoop(state);
 end.

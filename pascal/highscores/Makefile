@@ -8,7 +8,11 @@ release:
 
 .PHONY: run
 run: build
-	LOG_LEVEL=DEBUG ./highscores
+	./highscores
+
+.PHONY: debug
+debug: build
+	LOG_LEVEL=DEBUG gdb --eval-command='b fpc_raiseexception' ./highscores
 
 .PHONY: clean
 clean:

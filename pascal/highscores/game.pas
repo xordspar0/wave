@@ -29,9 +29,7 @@ function ScoreGame(state : game.State) : scoredgames.ScoredGame;
 implementation
 
 uses
-	sdl2,
-
-	gamepersistence;
+	sdl2;
 
 function New() : State;
 var

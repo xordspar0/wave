@@ -5,16 +5,18 @@ interface
 uses
   sdl2,
 
+  arenas,
+  game,
   scoredgames,
   phases;
 
 type State = record
   renderer : PSDL_Renderer;
   back     : Boolean;
-  scores   : Array[0..4] of scoredgames.ScoredGame;
+  scores   : Array of scoredgames.ScoredGame;
 end;
 
-function New(renderer : PSDL_Renderer) : scores.State;
+function New(a : arenas.Arena; renderer : PSDL_Renderer) : scores.State;
 function Update(var state : scores.State) : phases.Phase;
 procedure Draw(state : scores.State);
 
@@ -23,22 +25,15 @@ procedure KeyDown(var state : scores.State; key : TSDL_Keycode);
 implementation
 
 uses
-  game,
+  scoredgamepersistence,
   running;
 
-function New(renderer : PSDL_Renderer) : scores.State;
-var
-  scores   : Array[0..4] of scoredgames.ScoredGame = (
-    (sum: 654; gems: (175, 223, 12, 98, 146)),
-    (sum: 667; gems: (166, 218, 159, 68, 56)),
-    (sum: 846; gems: (109, 243, 63, 229, 202)),
-    (sum: 805; gems: (151, 196, 155, 175, 128)),
-    (sum: 774; gems: (160, 216, 2, 188, 208))
-  );
+function New(a : arenas.Arena; renderer : PSDL_Renderer) : scores.State;
 begin
   New.renderer := renderer;
   New.back := False;
-  New.scores := scores;
+  { TODO: Refresh scores on every visit, not at program start. }
+  New.scores := scoredgamepersistence.SelectTop5ScoredGames(a);
 end;
 
 function Update(var state : scores.State) : phases.Phase;
