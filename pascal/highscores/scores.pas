@@ -13,7 +13,7 @@ uses
 type State = record
   renderer : PSDL_Renderer;
   back     : Boolean;
-  scores   : Array of scoredgames.ScoredGame;
+  scores   : scoredgames.ScoredGameList;
 end;
 
 function New(a : arenas.Arena; renderer : PSDL_Renderer) : scores.State;
@@ -54,13 +54,13 @@ var
   gem : game.Gem;
 begin
   gem.visible := True;
-  for row := Low(state.Scores) to High(state.Scores) do
+  for row := 0 to state.Scores.cap do
   begin
     gem.y := 50 + 15 * row;
-    for col := Low(state.Scores[row].gems) to High(state.Scores[row].gems) do
+    for col := Low(state.Scores.games[row].gems) to High(state.Scores.games[row].gems) do
     begin
       gem.x := 50 + 10 * col;
-      gem.hue := state.Scores[row].gems[col];
+      gem.hue := state.Scores.games[row].gems[col];
       running.DrawGem(state.renderer, gem);
     end;
   end;

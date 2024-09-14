@@ -91,7 +91,7 @@ var
 	conn       : TSQLite3Connection;
 	gamesQuery : TSQLQuery;
 	gemsQuery  : TSQLQuery;
-	scores     : array of scoredgames.ScoredGame;
+	scores     : scoredgames.ScoredGameList;
 	i          : Integer = 0;
 	j          : Integer = 0;
 	gameId     : Integer;
@@ -99,7 +99,8 @@ begin
 	conn := Open();
 	CreateTableGames(conn);
 
-	scores := arenas.Alloc(a, SizeOf(scores), 5);
+	scores.cap := 5;
+	scores.games := arenas.Alloc(a, SizeOf(scoredgames.ScoredGame), scores.cap);
 
 	gamesQuery := TSQLQuery.Create(nil);
 	gamesQuery.Database := conn;
@@ -115,7 +116,7 @@ begin
 		while not EOF do
 		begin
 			gameId := FieldByName('id').AsInteger;
-			scores[i].sum := FieldByName('sum').AsInteger;
+			scores.games[i].sum := FieldByName('sum').AsInteger;
 
 			with gemsQuery do
 			begin
@@ -126,7 +127,7 @@ begin
 
 				while not EOF do
 				begin
-					scores[i].gems[j] := FieldByName('value').AsInteger;
+					scores.games[i].gems[j] := FieldByName('value').AsInteger;
 					Next;
 					Inc(j);
 				end;
