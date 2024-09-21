@@ -10,8 +10,9 @@ type ScoredGame = record
 end;
 
 type ScoredGameList = record
-  cap   : LongInt;
   games : ^scoredgames.ScoredGame;
+  len   : LongInt;
+  cap   : LongInt;
 end;
 
 implementation

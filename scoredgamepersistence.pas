@@ -198,8 +198,10 @@ begin
 	end;
 
 	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, '%s', [PChar(selectFromGames)]);
-	while sqlite3_step(gamesQuery) <> SQLITE_DONE do
+	for i := 0 to scores.cap-1 do
 	begin
+		if sqlite3_step(gamesQuery) = SQLITE_DONE then Break;
+
 		gameId := sqlite3_column_int(gamesQuery, 0);
 		scores.games[i].sum := sqlite3_column_int(gamesQuery, 1);
 
@@ -207,14 +209,11 @@ begin
 		sqlite3_bind_int(gemsQuery, 1, gameId);
 		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, '%s [%d]', [PChar(selectFromGems), gameId]);
 
-		j := 0;
-		while sqlite3_step(gemsQuery) <> SQLITE_DONE do
+		for j := Low(scores.games[i].gems) to High(scores.games[i].gems) do
 		begin
+			if sqlite3_step(gemsQuery) = SQLITE_DONE then Break;
 			scores.games[i].gems[j] := sqlite3_column_int(gemsQuery, 0);
-			Inc(j);
 		end;
-
-		Inc(i);
 	end;
 
 	sqlite3_finalize(gamesQuery);
@@ -224,6 +223,7 @@ begin
 
 	Close(db);
 
+	scores.len := i;
 	SelectTop5ScoredGames := scores;
 end;
 

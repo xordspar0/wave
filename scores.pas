@@ -54,7 +54,7 @@ var
   gem : game.Gem;
 begin
   gem.visible := True;
-  for row := 0 to state.Scores.cap do
+  for row := 0 to state.Scores.len-1 do
   begin
     gem.y := 50 + 15 * row;
     for col := Low(state.Scores.games[row].gems) to High(state.Scores.games[row].gems) do
