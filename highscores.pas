@@ -1,6 +1,5 @@
 uses
 	sdl2,
-	sysutils,
 
 	arenas,
 	game,
@@ -23,12 +22,6 @@ procedure Init(var state : ProgramState);
 begin
 	state.window := Nil;
 	state.renderer := Nil;
-
-	case GetEnvironmentVariable('LOG_LEVEL') of
-		'ERROR': SDL_LogSetAllPriority(SDL_LOG_PRIORITY_ERROR);
-		'INFO':  SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
-		'DEBUG': SDL_LogSetAllPriority(SDL_LOG_PRIORITY_DEBUG);
-	end;
 
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, '1');
 

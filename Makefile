@@ -12,7 +12,7 @@ run: build
 
 .PHONY: debug
 debug: build
-	LOG_LEVEL=DEBUG gdb --eval-command='b fpc_raiseexception' ./highscores
+	SDL_LOGGING=debug gdb --eval-command='b fpc_raiseexception' ./highscores
 
 .PHONY: clean
 clean:
