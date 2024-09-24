@@ -163,7 +163,7 @@ end;
 
 function SelectTop5ScoredGames(var a : arenas.Arena) : ScoredGameList;
 const
-	selectFromGames = 'SELECT id, sum FROM games ORDER BY sum LIMIT 5;';
+	selectFromGames = 'SELECT id, sum FROM games ORDER BY sum DESC LIMIT 5;';
 	selectFromGems  = 'SELECT value FROM gems WHERE game_id = :game_id;';
 var
 	db         : psqlite3;
