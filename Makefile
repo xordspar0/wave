@@ -1,18 +1,18 @@
 .PHONY: build
 build:
-	fpc -g -Fu'vendor/sdl3/units' highscores
+	fpc -g -Fu'vendor/sdl3/units' wave
 
 .PHONY: release
 release:
-	fpc -XX -Fu'vendor/sdl3/units' highscores
+	fpc -XX -Fu'vendor/sdl3/units' wave
 
 .PHONY: run
 run: build
-	./highscores
+	./wave
 
 .PHONY: debug
 debug: build
-	SDL_LOGGING=debug gdb --eval-command='b fpc_raiseexception' ./highscores
+	SDL_LOGGING=debug gdb --eval-command='b fpc_raiseexception' ./wave
 
 .PHONY: clean
 clean:

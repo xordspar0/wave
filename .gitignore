@@ -1,5 +1,5 @@
 # build files
-highscores
+wave
 *.o
 *.ppu
 *.res
