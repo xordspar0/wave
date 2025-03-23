@@ -1,5 +1,5 @@
 uses
-	sdl2,
+	SDL3,
 
 	arenas,
 	game,
@@ -25,12 +25,12 @@ begin
 
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, '1');
 
-	if SDL_Init(SDL_INIT_VIDEO) < 0 then
+	if not SDL_Init(SDL_INIT_VIDEO) then
 	begin
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, '%s', [SDL_GetError()]);
 	end;
 
-	if SDL_CreateWindowAndRenderer(640, 480, 0, @state.window, @state.renderer) < 0 then
+	if not SDL_CreateWindowAndRenderer('Wave', 640, 480, 0, @state.window, @state.renderer) then
 	begin
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, '%s', [SDL_GetError()]);
 	end;
@@ -45,24 +45,24 @@ begin
 		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
 		SDL_RenderClear(state.renderer);
 
-		while SDL_PollEvent(@event) = 1 do
+		while SDL_PollEvent(@event) do
 		begin
 			case event.type_ of
-				SDL_QUITEV: state.phase := quit;
-				SDL_KEYDOWN:
-					if event.key.repeat_ = 0 then
+				SDL_EVENT_QUIT: state.phase := quit;
+				SDL_EVENT_KEY_DOWN:
+					if not event.key.repeat_ then
 					case state.phase of
 						phases.Phase.mainmenu:
-							MainMenu.KeyDown(state.menu, event.key.keysym.sym);
+							MainMenu.KeyDown(state.menu, event.key.key);
 						phases.Phase.scores:
-							Scores.KeyDown(state.scores, event.key.keysym.sym);
+							Scores.KeyDown(state.scores, event.key.key);
 						phases.Phase.running:
-							Running.KeyDown(state.game, event.key.keysym.sym);
+							Running.KeyDown(state.game, event.key.key);
 					end;
-				SDL_MOUSEBUTTONDOWN:
+				SDL_EVENT_MOUSE_BUTTON_DOWN:
 					case state.phase of
 						phases.Phase.mainmenu:
-							mainMenu.MouseButtonDown(state.menu, event.button.button, event.button.x, event.button.y);
+							mainMenu.MouseButtonDown(state.menu, event.button.button, Round(event.button.x), Round(event.button.y));
 					end;
 			end;
 		end;

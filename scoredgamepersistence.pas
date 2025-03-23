@@ -15,7 +15,7 @@ uses
 	sqlite3,
 	sysutils,
 
-	sdl2;
+	SDL3;
 
 function Open() : psqlite3;
 const

@@ -3,7 +3,7 @@ unit running;
 interface
 
 uses
-	sdl2,
+	SDL3,
 	
 	game,
 	phases;

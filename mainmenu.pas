@@ -3,7 +3,7 @@ unit mainmenu;
 interface
 
 uses
-	sdl2,
+	SDL3,
 	
 	game,
 	phases,
@@ -120,7 +120,7 @@ begin
 		RenderText(state.renderer, state.textRenderer, button.text);
 
 		SDL_SetRenderTarget(state.renderer, Nil);
-		SDL_RenderCopy(state.renderer, state.textBuffer, Nil, @textRect);
+		SDL_RenderTexture(state.renderer, state.textBuffer, Nil, @textRect);
 	end;
 end;
 

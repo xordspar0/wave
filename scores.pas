@@ -3,7 +3,7 @@ unit scores;
 interface
 
 uses
-  sdl2,
+  SDL3,
 
   arenas,
   game,

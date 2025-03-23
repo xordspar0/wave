@@ -3,7 +3,7 @@ unit text;
 interface
 
 uses
-	sdl2;
+	SDL3;
 
 type
 	State = record
@@ -16,7 +16,7 @@ procedure RenderText(renderer : PSDL_Renderer; state : text.State; text : String
 implementation
 
 uses
-	sdl2_image;
+	SDL3_image;
 
 const
 	charWidth  : integer = 16;
@@ -60,7 +60,7 @@ begin
 	begin
 		src := GetCharCoords(c);
 
-		SDL_RenderCopy(renderer, state.fontSheet, @src, @dest);
+		SDL_RenderTexture(renderer, state.fontSheet, @src, @dest);
 		dest.x += charWidth + 2;
 	end;
 end;

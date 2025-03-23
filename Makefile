@@ -1,10 +1,10 @@
 .PHONY: build
 build:
-	fpc -g -Fu'vendor/*' highscores
+	fpc -g -Fu'vendor/sdl3/units' highscores
 
 .PHONY: release
 release:
-	fpc -XX -Fu'vendor/*' highscores
+	fpc -XX -Fu'vendor/sdl3/units' highscores
 
 .PHONY: run
 run: build
