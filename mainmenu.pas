@@ -29,7 +29,7 @@ function Update(var state : mainmenu.State) : phases.Phase;
 procedure Draw(state : mainmenu.State);
 
 procedure KeyDown(var state : mainmenu.State; key : TSDL_Keycode);
-procedure MouseButtonDown(var state : mainmenu.State; _ : Integer; x, y : Integer);
+procedure MouseButtonDown(var state : mainmenu.State; _ : Integer; x, y : Single);
 
 implementation
 
@@ -89,8 +89,8 @@ end;
 procedure Draw(state : mainmenu.State);
 var
 	button     : mainmenu.Button;
-	buttonRect : TSDL_Rect;
-	textRect   : TSDL_Rect;
+	buttonRect : TSDL_FRect;
+	textRect   : TSDL_FRect;
 begin
 	for button in state.buttons do
 	begin
@@ -110,13 +110,13 @@ begin
 			h := buttonRect.h - buttonPadding * 2;
 		end;
 
-		SDL_SetRenderDrawColor(state.renderer, 120, 120, 120, 0);
+		SDL_SetRenderDrawColor(state.renderer, 120, 120, 120, SDL_ALPHA_OPAQUE);
 		SDL_RenderFillRect(state.renderer, @buttonRect);
 
 		SDL_SetRenderTarget(state.renderer, state.textBuffer);
-		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
+		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, SDL_ALPHA_TRANSPARENT);
 		SDL_RenderClear(state.renderer);
-		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 		RenderText(state.renderer, state.textRenderer, button.text);
 
 		SDL_SetRenderTarget(state.renderer, Nil);
@@ -133,7 +133,7 @@ begin
 	end;
 end;
 
-procedure MouseButtonDown(var state : mainmenu.State; _ : Integer; x, y : Integer);
+procedure MouseButtonDown(var state : mainmenu.State; _ : Integer; x, y : Single);
 var
 	i : Integer;
 	b : mainmenu.Button;

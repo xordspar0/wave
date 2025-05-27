@@ -23,6 +23,11 @@ begin
 	state.window := Nil;
 	state.renderer := Nil;
 
+	if not SDL_SetAppMetadata('WAVE', '0.1', 'xyz.neolog.wave') then
+	begin
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, '%s', [SDL_GetError()]);
+	end;
+
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, '1');
 
 	if not SDL_Init(SDL_INIT_VIDEO) then
@@ -42,7 +47,7 @@ var
 begin
 	while state.phase <> phases.Phase.quit do
 	begin
-		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
+		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(state.renderer);
 
 		while SDL_PollEvent(@event) do
@@ -62,7 +67,7 @@ begin
 				SDL_EVENT_MOUSE_BUTTON_DOWN:
 					case state.phase of
 						phases.Phase.mainmenu:
-							mainMenu.MouseButtonDown(state.menu, event.button.button, Round(event.button.x), Round(event.button.y));
+							mainMenu.MouseButtonDown(state.menu, event.button.button, event.button.x, event.button.y);
 					end;
 			end;
 		end;
