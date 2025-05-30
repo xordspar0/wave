@@ -204,6 +204,7 @@ begin
 
 		gameId := sqlite3_column_int(gamesQuery, 0);
 		scores.games[i].sum := sqlite3_column_int(gamesQuery, 1);
+		scores.len := i + 1;
 
 		sqlite3_reset(gemsQuery);
 		sqlite3_bind_int(gemsQuery, 1, gameId);
@@ -223,7 +224,6 @@ begin
 
 	Close(db);
 
-	scores.len := i;
 	SelectTop5ScoredGames := scores;
 end;
 
