@@ -27,7 +27,7 @@ begin
 	New.fontSheet := IMG_LoadTexture(renderer, 'font.png');
 end;
 
-function GetCharCoords(c : Char) : TSDL_Rect;
+function GetCharCoords(c : Char) : TSDL_FRect;
 var
 	asciiVal : integer;
 begin
@@ -45,8 +45,8 @@ end;
 procedure RenderText(renderer : PSDL_Renderer; state : text.State; text : String);
 var
 	c     : Char;
-	src   : TSDL_Rect;
-	dest  : TSDL_Rect;
+	src   : TSDL_FRect;
+	dest  : TSDL_FRect;
 begin
 	with dest do
 	begin
