@@ -45,7 +45,7 @@ end;
 
 procedure DrawCharacter(r : PSDL_Renderer; c : Character);
 var
-	rect : TSDL_Rect;
+	rect : TSDL_FRect;
 begin
 	SDL_SetRenderDrawColor(r, 255, 0, 0, 0);
 
@@ -62,7 +62,7 @@ end;
 
 procedure DrawGem(r : PSDL_Renderer; gem : game.Gem);
 var
-	rect : TSDL_Rect;
+	rect : TSDL_FRect;
 	color : RGB;
 begin
 	if gem.visible then
