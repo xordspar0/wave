@@ -18,7 +18,7 @@ type
 
 	State = record
 		c           : Character;
-		dice        : Array [0..19] of Die;
+		dice        : Array [0..4] of Die;
 	end;
 
 function New() : State;
@@ -43,7 +43,7 @@ begin
 		x := i * 40 + 20;
 		y := 30;
 		r := 0;
-		value := i mod 6 + 1;
+		value := Random(6);
 	end;
 
 	New := g;
