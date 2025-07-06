@@ -10,17 +10,15 @@ type
 		x,y : Smallint;
 	end;
 
-	Gem = record
-		x,y     : Smallint;
-		hue     : Byte;
-		visible : Boolean;
+	Die = record
+		x,y   : Integer;
+		r     : Integer;
+		value : Byte;
 	end;
 
 	State = record
-		c        : Character;
-		gems     : Array [0..19] of Gem;
-		loot     : Array [0..4] of Gem;
-		lootNum  : Smallint;
+		c           : Character;
+		dice        : Array [0..19] of Die;
 	end;
 
 function New() : State;
@@ -39,39 +37,27 @@ begin
 	g.c.x := 0;
 	g.c.y := 0;
 
-	for i := Low(g.gems) to High(g.gems) div 2 do
-	with g.gems[i] do
+	for i := Low(g.dice) to High(g.dice) do
+	with g.dice[i] do
 	begin
-		x := i * 10 + 20;
+		x := i * 40 + 20;
 		y := 30;
-		hue := i * 25;
-		visible := true;
+		r := 0;
+		value := i mod 6 + 1;
 	end;
-	for i := High(g.gems) div 2 + 1 to High(g.gems) do
-	with g.gems[i] do
-	begin
-		x := (i - (High(g.gems) div 2 + 1)) * 10 + 20;
-		y := 40;
-		hue := Random(256);
-		visible := true;
-	end;
-
-	g.lootNum := 0;
 
 	New := g;
 end;
 
 function ScoreGame(state : game.State) : scoredgames.ScoredGame;
-var
-	i : Integer;
 begin
 	ScoreGame.sum := 0;
 
-	for i := Low(state.loot) to High(state.loot) do
-	begin
-		ScoreGame.gems[i] := state.loot[i].hue;
-		ScoreGame.sum := ScoreGame.sum + state.loot[i].hue;
-	end;
+	// for i := Low(state.loot) to High(state.loot) do
+	// begin
+	// 	ScoreGame.gems[i] := state.loot[i].hue;
+	// 	ScoreGame.sum := ScoreGame.sum + state.loot[i].hue;
+	// end;
 end;
 
 end.

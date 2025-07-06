@@ -1,5 +1,6 @@
 uses
 	SDL3,
+	SDL3_image,
 
 	arenas,
 	game,
@@ -10,12 +11,13 @@ uses
 
 type
 	ProgramState = record
-		window   : PSDL_Window;
-		renderer : PSDL_Renderer;
-		phase    : phases.Phase;
-		game     : game.State;
-		menu     : mainMenu.State;
-		scores   : scores.State;
+		window      : PSDL_Window;
+		renderer    : PSDL_Renderer;
+		spritesheet : PSDL_Texture;
+		phase       : phases.Phase;
+		game        : game.State;
+		menu        : mainMenu.State;
+		scores      : scores.State;
 	end;
 
 procedure Init(var state : ProgramState);
@@ -38,6 +40,12 @@ begin
 	if not SDL_CreateWindowAndRenderer('Wave', 640, 480, 0, @state.window, @state.renderer) then
 	begin
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, '%s', [SDL_GetError()]);
+	end;
+
+	state.spritesheet := IMG_LoadTexture(state.renderer, 'dice.png');
+	if state.spritesheet = Nil then
+	begin
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, 'Failed to load spritesheet: %s', [SDL_GetError()]);
 	end;
 end;
 
@@ -88,7 +96,7 @@ begin
 			phases.Phase.running:
 			begin
 				state.phase := running.Update(state.game);
-				Running.Draw(state.renderer, state.game);
+				Running.Draw(state.renderer, state.spritesheet, state.game);
 			end;
 		end;
 

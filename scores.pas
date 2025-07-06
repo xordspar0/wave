@@ -51,17 +51,11 @@ procedure Draw(state : scores.State);
 var
   row : Integer;
   col : Integer;
-  gem : game.Gem;
 begin
-  gem.visible := True;
   for row := 0 to state.Scores.len-1 do
   begin
-    gem.y := 50 + 15 * row;
     for col := Low(state.Scores.games[row].gems) to High(state.Scores.games[row].gems) do
     begin
-      gem.x := 50 + 10 * col;
-      gem.hue := state.Scores.games[row].gems[col];
-      running.DrawGem(state.renderer, gem);
     end;
   end;
 end;
