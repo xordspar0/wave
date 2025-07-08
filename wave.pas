@@ -75,7 +75,9 @@ begin
 				SDL_EVENT_MOUSE_BUTTON_DOWN:
 					case state.phase of
 						phases.Phase.mainmenu:
-							mainMenu.MouseButtonDown(state.menu, event.button.button, event.button.x, event.button.y);
+							MainMenu.MouseButtonDown(state.menu, event.button.button, event.button.x, event.button.y);
+						phases.Phase.running:
+							Running.MouseButtonDown(state.game, event.button.button, event.button.x, event.button.y);
 					end;
 			end;
 		end;

@@ -11,8 +11,13 @@ const
     w: 32; h: 32;
   );
 
-  dotSprite : TSDL_FRect = (
+  shadowSprite : TSDL_FRect = (
     x: 32; y: 0;
+    w: 32; h: 32;
+  );
+
+  dotSprite : TSDL_FRect = (
+    x: 64; y: 0;
     w: 6; h: 6;
   );
 

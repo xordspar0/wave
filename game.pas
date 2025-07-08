@@ -19,6 +19,7 @@ type
 	State = record
 		c           : Character;
 		dice        : Array [0..4] of Die;
+		payments    : Array [1..7] of Die;
 	end;
 
 function New() : State;
@@ -40,10 +41,19 @@ begin
 	for i := Low(g.dice) to High(g.dice) do
 	with g.dice[i] do
 	begin
-		x := i * 40 + 20;
-		y := 30;
+		x := i * 40 + 200;
+		y := 60;
 		r := 0;
 		value := Random(6);
+	end;
+
+	for i := Low(g.payments) to High(g.payments) do
+	with g.payments[i] do
+	begin
+		x := 0;
+		y := 0;
+		r := 0;
+		value := 0;
 	end;
 
 	New := g;
