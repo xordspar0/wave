@@ -207,21 +207,15 @@ begin
 	begin
 		die := state.dice[dieIndex];
 
-		Writeln(x, y);
-
 		if (x > die.x) and (x < die.x + 32)
 			and (y > die.y) and (y < die.y + 32) then
 		begin
-			Writeln('match');
 			for paymentIndex := High(state.payments) downto Low(state.payments) do
 			begin
-				Writeln('Value of ', paymentIndex, ': ', state.payments[paymentIndex].value);
 				if state.payments[paymentIndex].value = 0 then
 				begin
 					state.dice[dieIndex] := state.payments[paymentIndex];
 					state.payments[paymentIndex] := die;
-					Writeln('set ', paymentIndex, ' to ', die.value);
-
 					break;
 				end;
 			end;
