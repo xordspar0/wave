@@ -3,6 +3,7 @@ uses
 	SDL3_image,
 
 	arenas,
+	drawables,
 	game,
 	mainmenu,
 	phases,
@@ -49,9 +50,30 @@ begin
 	end;
 end;
 
+procedure DrawFilledRect(renderer : PSDL_Renderer; rect : drawables.DrawObject);
+var
+	sdlRect : TSDL_FRect;
+begin
+	Assert(rect.objectType = FilledRect);
+
+	SDL_SetRenderDrawColor(renderer, rect.c.r, rect.c.g, rect.c.b, SDL_ALPHA_OPAQUE);
+
+	sdlRect.x := rect.x;
+	sdlRect.y := rect.y;
+	sdlRect.w := rect.w;
+	sdlRect.h := rect.h;
+
+	SDL_RenderFillRect(renderer, @sdlRect);
+
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+end;
+
 procedure GameLoop(var state : ProgramState);
 var
 	event : TSDL_Event;
+
+	objects : drawables.DrawObjectList;
+	obj : drawables.DrawObject;
 begin
 	while state.phase <> phases.Phase.quit do
 	begin
@@ -86,20 +108,36 @@ begin
 			phases.Phase.mainmenu:
 			begin
 				state.phase := mainmenu.Update(state.menu);
-				MainMenu.Draw(state.menu);
+				objects := MainMenu.Draw(state.menu);
 			end;
 
 			phases.Phase.scores:
 			begin
 				state.phase := scores.Update(state.scores);
 				scores.Draw(state.scores);
+				objects := [];
 			end;
 
 			phases.Phase.running:
 			begin
 				state.phase := running.Update(state.game);
-				Running.Draw(state.renderer, state.spritesheet, state.game);
+				objects := Running.Draw(state.renderer, state.spritesheet, state.game);
 			end;
+		end;
+
+		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, '%s', [PChar(DrawObjectsToString(objects))]);
+
+		for obj in objects do
+		case obj.objectType of
+		FilledRect:
+			DrawFilledRect(state.renderer, obj);
+		Texture:
+			SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, 'Texture drawing is not yet implemented', []);
+			// SDL_RenderTextureRotated(
+			// 	state.renderer, state.spritesheet, sprite,
+			// 	@diePos, obj.r,
+			// 	Nil, SDL_FLIP_NONE
+			// );
 		end;
 
 		SDL_RenderPresent(state.renderer);

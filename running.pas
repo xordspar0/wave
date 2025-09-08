@@ -5,11 +5,12 @@ interface
 uses
 	SDL3,
 	
+	drawables,
 	game,
 	phases;
 
 function Update(var state : game.State) : phases.Phase;
-procedure Draw(renderer : PSDL_Renderer; spritesheet : PSDL_Texture; state : game.State);
+function Draw(renderer : PSDL_Renderer; spritesheet : PSDL_Texture; state : game.State) : DrawObjectList;
 
 procedure KeyDown(var state : game.State; key : TSDL_Keycode);
 procedure MouseButtonDown(var state : game.State; _ : Integer; x, y : Single);
@@ -22,21 +23,9 @@ uses
 	scoredgamepersistence,
 	scoredgames;
 
-procedure DrawCharacter(r : PSDL_Renderer; c : Character);
-var
-	rect : TSDL_FRect;
+function DrawCharacter(r : PSDL_Renderer; c : Character) : drawables.DrawObject;
 begin
-	SDL_SetRenderDrawColor(r, 255, 0, 0, 0);
-
-	with rect do
-	begin
-		x := c.x;
-		y := c.y;
-		w := 10;
-		h := 10;
-	end;
-
-	SDL_RenderFillRect(r, @rect);
+	DrawCharacter := drawables.NewFilledRect(c.x, c.y, drawables.NewColor(255, 0, 0), 10, 10);
 end;
 
 procedure DrawDie(renderer : PSDL_Renderer; spritesheet: PSDL_Texture;
@@ -80,13 +69,15 @@ begin
 	end;
 end;
 
-procedure DrawCosts(r : PSDL_Renderer; spritesheet: PSDL_Texture; payments : Array of game.Die; x : Integer; y : Integer);
+function DrawCosts(r : PSDL_Renderer; spritesheet: PSDL_Texture; payments : Array of game.Die; x : Integer; y : Integer) : DrawObjectList;
 var
 	menuPos : TSDL_FRect;
 	diePos  : TSDL_FRect;
 
 	i : Integer;
 begin
+	SetLength(DrawCosts, Length(payments));
+
 	for i := Low(payments) to High(payments) do
 	begin
 		menuPos.x := x;
@@ -94,10 +85,13 @@ begin
 		menuPos.w := 64;
 		menuPos.h := dice.shadowSprite.h;
 
-		SDL_SetRenderDrawColor(r, 180, 180, 180, SDL_ALPHA_OPAQUE);
-		SDL_RenderFillRect(r, @menuPos);
-
-		SDL_SetRenderDrawColor(r, 255, 255, 255, SDL_ALPHA_OPAQUE);
+		DrawCosts[i] := drawables.NewFilledRect(
+			Trunc(menuPos.x),
+			Trunc(menuPos.y),
+			drawables.NewColor(180, 180, 180),
+			Trunc(menuPos.w),
+			Trunc(menuPos.h)
+		);
 
 		with diePos do
 		begin
@@ -142,16 +136,18 @@ begin
 	Update := phases.Phase.running;
 end;
 
-procedure Draw(renderer : PSDL_Renderer; spritesheet : PSDL_Texture; state : game.State);
+function Draw(renderer : PSDL_Renderer; spritesheet : PSDL_Texture; state : game.State) : drawables.DrawObjectList;
 var
 	die: game.Die;
 begin
+	SetLength(Draw, 0);
+
 	for die in state.dice do
 	begin
 		DrawDie(renderer, spritesheet, @dice.sprite, die.x, die.y, die.r, die.value);
 	end;
-	DrawCharacter(renderer, state.c);
-	DrawCosts(renderer, spritesheet, state.payments, 10, 30);
+	Insert(DrawCharacter(renderer, state.c), Draw, Length(Draw));
+	Insert(DrawCosts(renderer, spritesheet, state.payments, 10, 30), Draw, Length(Draw));
 end;
 
 procedure KeyDown(var state : game.State; key : TSDL_Keycode);

@@ -5,6 +5,7 @@ interface
 uses
 	SDL3,
 	
+	drawables,
 	game,
 	phases,
 	text;
@@ -26,7 +27,7 @@ type
 
 function New(renderer : PSDL_Renderer; labels : array of string) : mainmenu.State;
 function Update(var state : mainmenu.State) : phases.Phase;
-procedure Draw(state : mainmenu.State);
+function Draw(state : mainmenu.State) : drawables.DrawObjectList;
 
 procedure KeyDown(var state : mainmenu.State; key : TSDL_Keycode);
 procedure MouseButtonDown(var state : mainmenu.State; _ : Integer; x, y : Single);
@@ -86,32 +87,28 @@ begin
 	state.accepted := False;
 end;
 
-procedure Draw(state : mainmenu.State);
+function Draw(state : mainmenu.State) : drawables.DrawObjectList;
 var
 	button     : mainmenu.Button;
-	buttonRect : TSDL_FRect;
 	textRect   : TSDL_FRect;
 begin
+	SetLength(Draw, 0);
+
 	for button in state.buttons do
 	begin
-		with buttonRect do
-		begin
-			x := button.x;
-			y := button.y;
-			w := button.w;
-			h := button.h;
-		end;
-
 		with textRect do
 		begin
-			x := buttonRect.x + buttonPadding;
-			y := buttonRect.y + buttonPadding;
-			w := buttonRect.w - buttonPadding * 2;
-			h := buttonRect.h - buttonPadding * 2;
+			x := button.x + buttonPadding;
+			y := button.y + buttonPadding;
+			w := button.w - buttonPadding * 2;
+			h := button.h - buttonPadding * 2;
 		end;
 
-		SDL_SetRenderDrawColor(state.renderer, 120, 120, 120, SDL_ALPHA_OPAQUE);
-		SDL_RenderFillRect(state.renderer, @buttonRect);
+		Insert(
+			drawables.NewFilledRect(button.x, button.y, drawables.NewColor(120, 120, 120), button.w, button.h ),
+			Draw,
+			Length(Draw)
+		);
 
 		SDL_SetRenderTarget(state.renderer, state.textBuffer);
 		SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, SDL_ALPHA_TRANSPARENT);
