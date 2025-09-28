@@ -25,7 +25,7 @@ uses
 
 function DrawCharacter(r : PSDL_Renderer; c : Character) : drawables.DrawObject;
 begin
-	DrawCharacter := drawables.NewFilledRect(c.x, c.y, drawables.NewColor(255, 0, 0), 10, 10);
+	DrawCharacter := drawables.NewFilledRect(c.x, c.y, 10, 10, drawables.NewColor(255, 0, 0));
 end;
 
 procedure DrawDie(renderer : PSDL_Renderer; spritesheet: PSDL_Texture;
@@ -88,9 +88,9 @@ begin
 		DrawCosts[i] := drawables.NewFilledRect(
 			Trunc(menuPos.x),
 			Trunc(menuPos.y),
-			drawables.NewColor(180, 180, 180),
 			Trunc(menuPos.w),
 			Trunc(menuPos.h)
+			drawables.NewColor(180, 180, 180),
 		);
 
 		with diePos do

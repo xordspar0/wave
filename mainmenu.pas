@@ -105,7 +105,7 @@ begin
 		end;
 
 		Insert(
-			drawables.NewFilledRect(button.x, button.y, drawables.NewColor(120, 120, 120), button.w, button.h ),
+			drawables.NewFilledRect(button.x, button.y, button.w, button.h, drawables.NewColor(120, 120, 120)),
 			Draw,
 			Length(Draw)
 		);

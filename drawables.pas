@@ -34,7 +34,7 @@ interface
   	// end;
 
   function NewColor(r, g, b : Integer) : Color;
-  function NewFilledRect(x, y : Integer; c : Color; w, h : Integer): DrawObject;
+  function NewFilledRect(x, y, w, h : Integer; c : Color): DrawObject;
   function DrawObjectToString(obj: DrawObject) : UTF8String;
   function DrawObjectsToString(objects: DrawObjectList) : UTF8String;
 
@@ -49,7 +49,7 @@ implementation
       NewColor.b := b;
   end;
 
-  function NewFilledRect(x, y : Integer; c : Color; w, h : Integer): DrawObject;
+  function NewFilledRect(x, y, w, h : Integer; c : Color): DrawObject;
   begin
     NewFilledRect.x := x;
     NewFilledRect.y := y;
