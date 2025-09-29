@@ -21,111 +21,150 @@ uses
 	color,
 	dice,
 	scoredgamepersistence,
-	scoredgames;
+	scoredgames,
+	sprites;
 
-function DrawCharacter(r : PSDL_Renderer; c : Character) : drawables.DrawObject;
+function DrawCharacter(c : Character) : drawables.DrawObject;
 begin
 	DrawCharacter := drawables.NewFilledRect(c.x, c.y, 10, 10, drawables.NewColor(255, 0, 0));
 end;
 
-procedure DrawDie(renderer : PSDL_Renderer; spritesheet: PSDL_Texture;
-	sprite : PSDL_FRect;
-	x : Single; y : Single; r : Single;
-	value : Byte);
+function DrawDie(
+	x, y  : Integer;
+	r     : Double;
+	value : Byte
+) : DrawObjectList;
 var
-	diePos : TSDL_FRect;
-	dotPos : TSDL_FRect;
-	dot    : TSDL_FRect;
+	dot : TSDL_FRect;
 begin
-	diePos.x := x;
-	diePos.y := y;
-	diePos.w := dice.sprite.w;
-	diePos.h := dice.sprite.h;
+	DrawDie := [];
 
 	if value > 0 then
 	begin
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-		SDL_RenderTextureRotated(
-			renderer, spritesheet, sprite,
-			@diePos, r,
-			Nil, SDL_FLIP_NONE
+		SetLength(DrawDie, value+1);
+
+		Insert(
+			drawables.NewTexture(
+				sprites.DieFace,
+				x, y, r,
+				drawables.Origin.Center,
+				drawables.NewColor(255, 255, 255)
+			),
+			DrawDie,
+			Length(DrawDie)
 		);
 
 		for dot in dice.dotsPos[value] do
 		begin
-			with dotPos do
-			begin
-				x := diePos.x + dot.x - dot.w/2;
-				y := diePos.y + dot.y - dot.w/2;
-				w := dot.w;
-				h := dot.h;
-			end;
-
-			SDL_RenderTexture(
-				renderer, spritesheet,
-				@dice.dotSprite, @dotPos
+			Insert(
+				drawables.NewTexture(
+					sprites.DieDot,
+					Trunc(x + dot.x - dot.w/2),
+					Trunc(y + dot.y - dot.w/2),
+					0,
+					drawables.Origin.Center,
+					drawables.NewColor(255, 255, 255)
+				),
+				DrawDie,
+				Length(DrawDie)
 			);
 		end;
 	end;
 end;
 
-function DrawCosts(r : PSDL_Renderer; spritesheet: PSDL_Texture; payments : Array of game.Die; x : Integer; y : Integer) : DrawObjectList;
+function shadow(die : drawables.DrawObjectList) : drawables.DrawObjectList;
 var
-	menuPos : TSDL_FRect;
-	diePos  : TSDL_FRect;
-
 	i : Integer;
 begin
-	SetLength(DrawCosts, Length(payments));
+	for i := Low(die) to High(die) do
+	begin
+		if die[i].sprite = sprites.DieFace then
+			die[i].sprite := sprites.DieFaceShadow;
+	end;
+
+	shadow := die;
+end;
+
+function DrawCosts(payments : Array of game.Die; x : Integer; y : Integer) : DrawObjectList;
+const
+	rowHeight  : Integer = 32;
+	rowPadding : Integer = 10;
+var
+	i          : Integer;
+	{ TODO: Remove dependency on SDL. }
+	menuPos    : TSDL_FRect;
+	diePos     : TSDL_FRect;
+begin
+	DrawCosts := [];
 
 	for i := Low(payments) to High(payments) do
 	begin
 		menuPos.x := x;
-		menuPos.y := y + i * (dice.shadowSprite.h + 10);
+		menuPos.y := y + i * (rowHeight + rowPadding);
 		menuPos.w := 64;
-		menuPos.h := dice.shadowSprite.h;
+		menuPos.h := rowHeight;
 
-		DrawCosts[i] := drawables.NewFilledRect(
-			Trunc(menuPos.x),
-			Trunc(menuPos.y),
-			Trunc(menuPos.w),
-			Trunc(menuPos.h)
-			drawables.NewColor(180, 180, 180),
+		Insert(
+			drawables.NewFilledRect(
+				Trunc(menuPos.x),
+				Trunc(menuPos.y),
+				Trunc(menuPos.w),
+				Trunc(menuPos.h),
+				drawables.NewColor(180, 180, 180)
+			),
+			DrawCosts,
+			Length(DrawCosts)
 		);
 
 		with diePos do
 		begin
 			x := menuPos.x + menuPos.w + 10;
 			y := menuPos.y;
-			w := dice.shadowSprite.w;
-			h := dice.shadowSprite.h;
 		end;
 	
 		if payments[i].value > 0 then
 		begin
-			DrawDie(
-				r, spritesheet, @dice.sprite,
-				diePos.x, diePos.y, 0, payments[i].value);
+			Insert(
+				DrawDie(Trunc(diePos.x), Trunc(diePos.y), 0, payments[i].value),
+				DrawCosts,
+				Length(DrawCosts)
+			);
 		end
 		else begin
-			SDL_RenderTexture(
-				r, spritesheet,
-				@dice.shadowSprite, @diePos
+			Insert(
+				drawables.NewTexture(
+					sprites.DieFaceShadow,
+					Trunc(diePos.x), Trunc(diePos.y), 0,
+					drawables.Origin.Center,
+					drawables.NewColor(255, 255, 255)
+				),
+				DrawCosts,
+				Length(DrawCosts)
 			);
 		end;
 
-		diePos.x += dice.shadowSprite.w + 10;
+		{ TODO: 32 is a magic number that represents the width of a dice sprite. }
+		{ Replace this with something smarter. }
+		diePos.x += 32 + 10;
 
 		if payments[i].value > 0 then
 		begin
-			DrawDie(
-				r, spritesheet, @dice.shadowSprite,
-				diePos.x, diePos.y, 0, i + 1 - payments[i].value);
+			Insert(
+				shadow(DrawDie(Trunc(diePos.x), Trunc(diePos.y), 0, i + 1 - payments[i].value)),
+				DrawCosts,
+				Length(DrawCosts)
+			);
 		end
 		else begin
-			SDL_RenderTexture(
-				r, spritesheet,
-				@dice.shadowSprite, @diePos
+			Insert(
+				drawables.NewTexture(
+					sprites.DieFaceShadow,
+					Trunc(diePos.x), Trunc(diePos.y), 0,
+					drawables.Origin.Center,
+					drawables.NewColor(255, 255, 255)
+				),
+				DrawCosts,
+				Length(DrawCosts)
 			);
 		end;
 	end;
@@ -140,14 +179,15 @@ function Draw(renderer : PSDL_Renderer; spritesheet : PSDL_Texture; state : game
 var
 	die: game.Die;
 begin
-	SetLength(Draw, 0);
+	Draw := [];
 
 	for die in state.dice do
 	begin
-		DrawDie(renderer, spritesheet, @dice.sprite, die.x, die.y, die.r, die.value);
+		Insert(DrawDie(die.x, die.y, die.r, die.value), Draw, Length(Draw));
 	end;
-	Insert(DrawCharacter(renderer, state.c), Draw, Length(Draw));
-	Insert(DrawCosts(renderer, spritesheet, state.payments, 10, 30), Draw, Length(Draw));
+
+	Insert(DrawCharacter(state.c), Draw, Length(Draw));
+	Insert(DrawCosts(state.payments, 10, 30), Draw, Length(Draw));
 end;
 
 procedure KeyDown(var state : game.State; key : TSDL_Keycode);

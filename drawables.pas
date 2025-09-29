@@ -3,7 +3,9 @@ unit drawables;
 interface
 
   uses
-    SDL3;
+    SDL3,
+
+    sprites;
 
   type
     Color = record
@@ -12,10 +14,9 @@ interface
       b : Integer;
     end;
     
-  	DrawObjectType = (FilledRect, Texture);
+		DrawObjectType = (FilledRect, Texture);
 
-  	DrawSprite = record
-  	end;
+		Origin = (TopLeft, Center);
 
   	DrawObject = record
   		x : Integer;
@@ -23,7 +24,7 @@ interface
       c : Color;
   		case objectType : DrawObjectType of
   		FilledRect : (w : Integer; h : Integer);
-  		Texture : (sprite : DrawSprite; r : Double);
+			Texture : (sprite : sprites.Sprite; r : Double; o : Origin);
   	end;
 
     DrawObjectList = Array of DrawObject;
@@ -35,6 +36,7 @@ interface
 
   function NewColor(r, g, b : Integer) : Color;
   function NewFilledRect(x, y, w, h : Integer; c : Color): DrawObject;
+  function NewTexture(sprite : sprites.Sprite; x, y : Integer; rotation : Double; origin : Origin; c : Color): DrawObject;
   function DrawObjectToString(obj: DrawObject) : UTF8String;
   function DrawObjectsToString(objects: DrawObjectList) : UTF8String;
 
@@ -57,6 +59,22 @@ implementation
     NewFilledRect.objectType := FilledRect;
     NewFilledRect.w := w;
     NewFilledRect.h := h;
+  end;
+
+  function NewTexture(
+    sprite : sprites.Sprite;
+    x, y : Integer; rotation : Double;
+    origin : Origin;
+    c : Color
+  ): DrawObject;
+  begin
+    NewTexture.x := x;
+    NewTexture.y := y;
+    NewTexture.c := c;
+    NewTexture.objectType := Texture;
+    NewTexture.sprite := sprite;
+    NewTexture.r := rotation;
+    NewTexture.o := origin;
   end;
 
   function TypeToString(t : DrawObjectType) : UTF8String;

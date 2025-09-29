@@ -8,13 +8,15 @@ uses
 	mainmenu,
 	phases,
 	running,
-	scores;
+	scores,
+	sprites;
 
 type
 	ProgramState = record
 		window      : PSDL_Window;
 		renderer    : PSDL_Renderer;
 		spritesheet : PSDL_Texture;
+		sprites     : sprites.SpriteDataList;
 		phase       : phases.Phase;
 		game        : game.State;
 		menu        : mainMenu.State;
@@ -50,21 +52,52 @@ begin
 	end;
 end;
 
-procedure DrawFilledRect(renderer : PSDL_Renderer; rect : drawables.DrawObject);
+procedure DrawFilledRect(renderer : PSDL_Renderer; obj : drawables.DrawObject);
 var
 	sdlRect : TSDL_FRect;
 begin
-	Assert(rect.objectType = FilledRect);
+	Assert(obj.objectType = drawables.FilledRect);
 
-	SDL_SetRenderDrawColor(renderer, rect.c.r, rect.c.g, rect.c.b, SDL_ALPHA_OPAQUE);
+	sdlRect.x := obj.x;
+	sdlRect.y := obj.y;
+	sdlRect.w := obj.w;
+	sdlRect.h := obj.h;
 
-	sdlRect.x := rect.x;
-	sdlRect.y := rect.y;
-	sdlRect.w := rect.w;
-	sdlRect.h := rect.h;
-
+	SDL_SetRenderDrawColor(renderer, obj.c.r, obj.c.g, obj.c.b, SDL_ALPHA_OPAQUE);
 	SDL_RenderFillRect(renderer, @sdlRect);
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+end;
 
+procedure DrawTexture(renderer : PSDL_Renderer; spriteList: sprites.SpriteDataList; obj : drawables.DrawObject);
+const
+	topLeft : TSDL_Point = (x: 0; y: 0);
+var
+	sprite  : sprites.SpriteData;
+	dst     : TSDL_FRect;
+	center  : PSDL_FPoint;
+begin
+	Assert(obj.objectType = drawables.Texture);
+
+	sprite := spriteList[Ord(obj.sprite)];
+
+	dst.x := obj.x;
+	dst.y := obj.y;
+	dst.w := sprite.rect.w;
+	dst.h := sprite.rect.h;
+
+	case obj.o of
+		drawables.Origin.Center:
+			center := Nil;
+		drawables.Origin.TopLeft:
+			center := @topLeft;
+	end;
+
+	SDL_SetRenderDrawColor(renderer, obj.c.r, obj.c.g, obj.c.b, SDL_ALPHA_OPAQUE);
+	SDL_RenderTextureRotated(
+		renderer, sprite.spritesheet,
+		@sprite.rect, @dst,
+		obj.r, center, SDL_FLIP_NONE
+	);
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 end;
 
@@ -132,12 +165,7 @@ begin
 		FilledRect:
 			DrawFilledRect(state.renderer, obj);
 		Texture:
-			SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, 'Texture drawing is not yet implemented', []);
-			// SDL_RenderTextureRotated(
-			// 	state.renderer, state.spritesheet, sprite,
-			// 	@diePos, obj.r,
-			// 	Nil, SDL_FLIP_NONE
-			// );
+			DrawTexture(state.renderer, state.sprites, obj);
 		end;
 
 		SDL_RenderPresent(state.renderer);
@@ -150,6 +178,7 @@ var
 begin
 	a := arenas.New(4096);
 	Init(state);
+	state.sprites := sprites.Load(state.renderer);
 	state.game := game.New();
 	state.menu := mainMenu.New(state.renderer, ['NEW GAME', 'HIGH SCORES'] );
 	state.scores := scores.New(a, state.renderer);
