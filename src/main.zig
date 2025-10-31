@@ -1,10 +1,11 @@
 const std = @import("std");
-const Allocator = std.mem.Allocator;
+const EnumArray = std.enums.EnumArray;
 
 const sdl3 = @import("sdl3");
 const log = sdl3.log.Category;
 
 const game = @import("game.zig");
+const graphics = @import("graphics/graphics.zig");
 
 pub fn main() !void {
     defer sdl3.shutdown();
@@ -22,9 +23,17 @@ pub fn main() !void {
         .dice = .{game.Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 4,
         .payments = .{game.Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 6,
     };
-    try log.logInfo(.application, "First die: {d}", .{g.dice[0].value});
 
-    Gameloop(renderer, g) catch {
+    const sprites = graphics.sprites.init(renderer) catch |err| {
+        try sdl3.log.Category.logCritical(
+            .application,
+            "Failed to load sprites: {}",
+            .{err},
+        );
+        return;
+    };
+
+    Gameloop(renderer, g, sprites) catch {
         try log.logCritical(
             .application,
             "Fatal runtime error: {?s}",
@@ -57,7 +66,7 @@ fn SDLInit() !struct { sdl3.video.Window, sdl3.render.Renderer } {
     return sdl3.render.Renderer.initWithWindow("Wave", 640, 480, .{});
 }
 
-fn Gameloop(renderer: sdl3.render.Renderer, g: game.Game) !void {
+fn Gameloop(renderer: sdl3.render.Renderer, g: game.Game, sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData)) !void {
     var gameArena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer gameArena.deinit();
 
@@ -112,7 +121,45 @@ fn Gameloop(renderer: sdl3.render.Renderer, g: game.Game) !void {
                     };
                 },
                 .Texture => |t| {
-                    try log.logInfo(.application, "Found a texture: {}", .{t});
+                    const sprite = sprites.get(t.sprite);
+
+                    renderer.setDrawColor(.{ .r = t.color.r, .g = t.color.g, .b = t.color.b, .a = 255 }) catch {
+                        try log.logWarn(.application, "Failed to set color: {?s}", .{sdl3.errors.get()});
+                    };
+
+                    renderer.renderTextureRotated(
+                        sprite.spritesheet,
+                        sprite.rect,
+                        switch (t.origin) {
+                            .top_left => .{
+                                .x = @floatFromInt(t.x),
+                                .y = @floatFromInt(t.y),
+                                .w = sprite.rect.w,
+                                .h = sprite.rect.h,
+                            },
+                            .center => .{
+                                .x = @as(f32, @floatFromInt(t.x)) - sprite.rect.w / 2,
+                                .y = @as(f32, @floatFromInt(t.y)) - sprite.rect.h / 2,
+                                .w = sprite.rect.w,
+                                .h = sprite.rect.h,
+                            },
+                        },
+                        t.r,
+                        switch (t.origin) {
+                            .top_left => .{ .x = 0, .y = 0 },
+                            .center => null,
+                        },
+                        .{
+                            .horizontal = false,
+                            .vertical = false,
+                        },
+                    ) catch {
+                        try log.logError(.application, "Failed to draw a texture: {?s}", .{sdl3.errors.get()});
+                    };
+
+                    renderer.setDrawColor(white) catch {
+                        try log.logWarn(.application, "Failed to set color: {?s}", .{sdl3.errors.get()});
+                    };
                 },
             }
         }

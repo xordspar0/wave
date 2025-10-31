@@ -40,11 +40,20 @@ const MainMenu = struct {
         var objects = ArrayList(Drawable).empty;
 
         try objects.append(a, Drawable{ .FilledRect = .{
-            .x = 10,
-            .y = 15,
+            .x = 25,
+            .y = 25,
             .w = 100,
             .h = 100,
             .color = Color{ .r = 128, .g = 128, .b = 255 },
+        } });
+
+        try objects.append(a, Drawable{ .Texture = .{
+            .x = 25,
+            .y = 25,
+            .r = 45,
+            .origin = .center,
+            .sprite = .die_face,
+            .color = Color{ .r = 255, .g = 255, .b = 255 },
         } });
 
         return objects;
