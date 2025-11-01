@@ -1,19 +1,18 @@
 .PHONY: build
 build:
-	fpc -g -Fu'vendor/sdl3/units' wave
+	zig build
 
 .PHONY: release
 release:
-	fpc -XX -Fu'vendor/sdl3/units' wave
+	zig build -Doptimize=ReleaseFast
 
 .PHONY: run
 run: build
-	./wave
+	zig-out/bin/wave
 
 .PHONY: debug
 debug: build
-	SDL_LOGGING=debug gdb --eval-command='b fpc_raiseexception' ./wave
+	SDL_LOGGING=debug gdb zig-out/bin/wave
 
 .PHONY: clean
 clean:
-	rm -f *.o *.ppu *.res

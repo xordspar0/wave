@@ -1,8 +1,6 @@
 # build files
-wave
-*.o
-*.ppu
-*.res
+.zig-cache/
+zig-out/
 
 # runtime files
 scores.db
