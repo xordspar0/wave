@@ -5,6 +5,10 @@ pub const Color = struct {
     r: u8,
     g: u8,
     b: u8,
+
+    pub fn rgb(r: u8, g: u8, b: u8) Color {
+        return .{ .r = r, .g = g, .b = b };
+    }
 };
 
 pub const Origin = enum { top_left, center };

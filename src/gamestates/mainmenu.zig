@@ -47,7 +47,7 @@ pub const MainMenu = struct {
                 .y = button.y + button_padding,
                 .w = button.w - button_padding * 2,
                 .h = button.h - button_padding * 2,
-                .color = if (i == self.selected) Color{ .r = 128, .g = 128, .b = 255 } else Color{ .r = 128, .g = 128, .b = 128 },
+                .color = if (i == self.selected) Color.rgb(128, 128, 255) else Color.rgb(128, 128, 128),
             } });
         }
 
