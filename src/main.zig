@@ -1,4 +1,5 @@
 const std = @import("std");
+const Allocator = std.mem.Allocator;
 const EnumArray = std.enums.EnumArray;
 
 const sdl3 = @import("sdl3");
@@ -6,6 +7,7 @@ const log = sdl3.log.Category;
 
 const game = @import("game.zig");
 const graphics = @import("graphics/graphics.zig");
+const gamestates = @import("gamestates/gamestates.zig");
 
 pub fn main() !void {
     defer sdl3.shutdown();
@@ -18,8 +20,11 @@ pub fn main() !void {
         return;
     };
 
+    var gameArena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer gameArena.deinit();
+
     const g: game.Game = .{
-        .state = .MainMenu,
+        .state = .{ .MainMenu = try gamestates.MainMenu.init(gameArena.allocator(), &[_][]const u8{ "NEW GAME", "HIGH SCORES" }) },
         .dice = .{game.Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 4,
         .payments = .{game.Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 6,
     };
@@ -33,7 +38,7 @@ pub fn main() !void {
         return;
     };
 
-    Gameloop(renderer, g, sprites) catch {
+    Gameloop(gameArena.allocator(), renderer, g, sprites) catch {
         try log.logCritical(
             .application,
             "Fatal runtime error: {?s}",
@@ -66,13 +71,10 @@ fn SDLInit() !struct { sdl3.video.Window, sdl3.render.Renderer } {
     return sdl3.render.Renderer.initWithWindow("Wave", 640, 480, .{});
 }
 
-fn Gameloop(renderer: sdl3.render.Renderer, g: game.Game, sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData)) !void {
-    var gameArena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer gameArena.deinit();
-
+fn Gameloop(gameArena: Allocator, renderer: sdl3.render.Renderer, g: game.Game, sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData)) !void {
     var state = g.state;
     while (state != .Quit) {
-        var frameArena = std.heap.ArenaAllocator.init(gameArena.allocator());
+        var frameArena = std.heap.ArenaAllocator.init(gameArena);
         defer frameArena.deinit();
 
         const background = sdl3.pixels.Color{ .r = 255, .g = 128, .b = 255, .a = 255 };

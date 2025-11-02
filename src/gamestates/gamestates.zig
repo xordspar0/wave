@@ -5,7 +5,7 @@ const ArrayList = std.ArrayList;
 const graphics = @import("../graphics/graphics.zig");
 const Drawable = graphics.Drawable;
 
-const MainMenu = @import("mainmenu.zig").MainMenu;
+pub const MainMenu = @import("mainmenu.zig").MainMenu;
 
 pub const State = union(enum) {
     MainMenu: MainMenu,
