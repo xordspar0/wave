@@ -20,11 +20,11 @@ pub fn main() !void {
         return;
     };
 
-    var gameArena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer gameArena.deinit();
+    var game_arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer game_arena.deinit();
 
     const g: game.Game = .{
-        .state = .{ .MainMenu = try gamestates.MainMenu.init(gameArena.allocator(), &[_][]const u8{ "NEW GAME", "HIGH SCORES" }) },
+        .state = .{ .MainMenu = gamestates.MainMenu{} },
         .dice = .{game.Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 4,
         .payments = .{game.Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 6,
     };
@@ -38,7 +38,7 @@ pub fn main() !void {
         return;
     };
 
-    Gameloop(gameArena.allocator(), renderer, g, sprites) catch {
+    Gameloop(game_arena.allocator(), renderer, g, sprites) catch {
         try log.logCritical(
             .application,
             "Fatal runtime error: {?s}",
@@ -71,10 +71,13 @@ fn SDLInit() !struct { sdl3.video.Window, sdl3.render.Renderer } {
     return sdl3.render.Renderer.initWithWindow("Wave", 640, 480, .{});
 }
 
-fn Gameloop(gameArena: Allocator, renderer: sdl3.render.Renderer, g: game.Game, sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData)) !void {
+fn Gameloop(game_arena: Allocator, renderer: sdl3.render.Renderer, g: game.Game, sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData)) !void {
+    var state_arena = std.heap.ArenaAllocator.init(game_arena);
+    defer state_arena.deinit();
+
     var state = g.state;
     while (state != .Quit) {
-        var frameArena = std.heap.ArenaAllocator.init(gameArena);
+        var frameArena = std.heap.ArenaAllocator.init(game_arena);
         defer frameArena.deinit();
 
         const background = sdl3.pixels.Color{ .r = 255, .g = 128, .b = 255, .a = 255 };
@@ -94,15 +97,20 @@ fn Gameloop(gameArena: Allocator, renderer: sdl3.render.Renderer, g: game.Game, 
                 else => {},
             };
 
-        const nextState = state.update();
-        defer state = nextState;
+        const optional_next_state = state.update();
+        defer {
+            if (optional_next_state) |next_state| {
+                _ = state_arena.reset(.free_all);
+                state = next_state;
+            }
+        }
 
-        const drawObjects = state.draw(frameArena.allocator()) catch |err| {
+        const draw_objects = state.draw(frameArena.allocator()) catch |err| {
             try log.logError(.application, "Failed to draw state {}: {}", .{ state, err });
             continue;
         };
 
-        for (drawObjects.items) |object| {
+        for (draw_objects.items) |object| {
             switch (object) {
                 .FilledRect => |r| {
                     renderer.setDrawColor(.{ .r = r.color.r, .g = r.color.g, .b = r.color.b, .a = 255 }) catch {

@@ -13,7 +13,7 @@ pub const State = union(enum) {
     Running: Running,
     Quit: Quit,
 
-    pub fn update(self: State) State {
+    pub fn update(self: State) ?State {
         return switch (self) {
             inline else => |impl| impl.update(),
         };
