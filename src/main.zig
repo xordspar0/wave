@@ -72,9 +72,6 @@ fn SDLInit() !struct { sdl3.video.Window, sdl3.render.Renderer } {
 }
 
 fn Gameloop(game_arena: Allocator, renderer: sdl3.render.Renderer, g: game.Game, sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData)) !void {
-    var state_arena = std.heap.ArenaAllocator.init(game_arena);
-    defer state_arena.deinit();
-
     var state = g.state;
     while (state != .Quit) {
         var frameArena = std.heap.ArenaAllocator.init(game_arena);
@@ -92,18 +89,15 @@ fn Gameloop(game_arena: Allocator, renderer: sdl3.render.Renderer, g: game.Game,
 
         while (sdl3.events.poll()) |event|
             switch (event) {
+                .key_down => |keyboard| if (keyboard.key) |key| {
+                    state = state.keyDown(key);
+                },
                 .quit => state = .Quit,
                 .terminating => state = .Quit,
                 else => {},
             };
 
-        const optional_next_state = state.update();
-        defer {
-            if (optional_next_state) |next_state| {
-                _ = state_arena.reset(.free_all);
-                state = next_state;
-            }
-        }
+        state = state.update();
 
         const draw_objects = state.draw(frameArena.allocator()) catch |err| {
             try log.logError(.application, "Failed to draw state {}: {}", .{ state, err });

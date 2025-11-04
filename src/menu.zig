@@ -14,27 +14,39 @@ pub fn Menu(comptime Button: type) type {
         x: i16,
         y: i16,
         buttons: EnumArray(Button, []const u8),
-        selected: u8 = 0,
+        selected: isize = 0,
 
         const button_width = 250;
         const button_height = 48;
         const button_padding = 5;
         const button_margin = 10;
 
-        // TODO: Read input to change selection and return the selected button when the user presses enter.
-        pub fn update(self: Self) ?Button {
-            _ = self;
+        pub fn up(self: Self) Self {
+            return .{
+                .x = self.x,
+                .y = self.y,
+                .buttons = self.buttons,
+                .selected = std.math.clamp(self.selected - 1, 0, self.buttons.values.len - 1),
+            };
+        }
 
-            return null;
+        pub fn down(self: Self) Self {
+            return .{
+                .x = self.x,
+                .y = self.y,
+                .buttons = self.buttons,
+                .selected = std.math.clamp(self.selected + 1, 0, self.buttons.values.len - 1),
+            };
+        }
+
+        pub fn select(self: Self) Button {
+            return @enumFromInt(self.selected);
         }
 
         pub fn draw(self: Self, a: Allocator) !ArrayList(Drawable) {
             var objects = ArrayList(Drawable).empty;
 
-            for (self.buttons.values, 0..) |button, i| {
-                // DEBUG
-                std.debug.print("{s}\n", .{button});
-
+            for (0..self.buttons.values.len) |i| {
                 try objects.append(a, Drawable{ .FilledRect = .{
                     .x = self.x,
                     .y = self.y + @as(i16, @intCast(i * (button_height + button_margin))),

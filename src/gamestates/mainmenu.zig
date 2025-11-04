@@ -3,6 +3,8 @@ const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
 const EnumArray = std.EnumArray;
 
+const Keycode = @import("sdl3").keycode.Keycode;
+
 const graphics = @import("../graphics/graphics.zig");
 const Color = graphics.Color;
 const Drawable = graphics.Drawable;
@@ -19,23 +21,31 @@ pub const MainMenu = struct {
         .buttons = EnumArray(Button, []const u8).init(.{
             .new_game = "NEW GAME",
             .high_scores = "HIGH SCORES",
+            .quit = "QUIT",
         }),
     },
 
     const Button = enum {
         new_game,
         high_scores,
+        quit,
     };
 
-    pub fn update(self: MainMenu) ?State {
-        if (self.menu.update()) |selected_button| {
-            return switch (selected_button) {
-                .new_game => State{ .Running = .{} },
-                .high_scores => State{ .Scores = .{} },
-            };
-        }
+    pub fn update(self: MainMenu) State {
+        return .{ .MainMenu = self };
+    }
 
-        return null;
+    pub fn keyDown(self: MainMenu, key: Keycode) State {
+        return switch (key) {
+            .up => .{ .MainMenu = .{ .menu = self.menu.up() } },
+            .down => .{ .MainMenu = .{ .menu = self.menu.down() } },
+            .return_key => switch (self.menu.select()) {
+                .new_game => .{ .Running = .{} },
+                .high_scores => .{ .Scores = .{} },
+                .quit => .{ .Quit = .{} },
+            },
+            else => .{ .MainMenu = self },
+        };
     }
 
     pub fn draw(self: MainMenu, a: Allocator) !ArrayList(Drawable) {
