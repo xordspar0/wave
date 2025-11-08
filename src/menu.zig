@@ -46,13 +46,22 @@ pub fn Menu(comptime Button: type) type {
         pub fn draw(self: Self, a: Allocator) !ArrayList(Drawable) {
             var objects = ArrayList(Drawable).empty;
 
-            for (0..self.buttons.values.len) |i| {
+            for (self.buttons.values, 0..) |label, i| {
+                const button_x = self.x;
+                const button_y = self.y + @as(i16, @intCast(i * (button_height + button_margin)));
+
                 try objects.append(a, Drawable{ .FilledRect = .{
-                    .x = self.x,
-                    .y = self.y + @as(i16, @intCast(i * (button_height + button_margin))),
+                    .x = button_x,
+                    .y = button_y,
                     .w = button_width,
                     .h = button_height,
                     .color = if (i == self.selected) Color.rgb(128, 128, 255) else Color.rgb(128, 128, 128),
+                } });
+
+                try objects.append(a, Drawable{ .Text = .{
+                    .x = button_x + button_padding,
+                    .y = button_y + button_padding,
+                    .text = try a.dupe(u8, label),
                 } });
             }
 
