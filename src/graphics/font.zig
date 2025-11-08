@@ -20,8 +20,10 @@ pub const Font = struct {
 };
 
 pub fn init(renderer: sdl3.render.Renderer) !Font {
+    const stream = try sdl3.io_stream.Stream.initFromConstMem(@embedFile("font.png"));
+
     return .{
-        .spritesheet = try sdl3.image.loadTexture(renderer, "font.png"),
+        .spritesheet = try sdl3.image.loadTextureIo(renderer, stream, true),
         .char_width = 16,
         .char_height = 32,
     };

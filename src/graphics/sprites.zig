@@ -17,7 +17,8 @@ pub const SpriteData = struct {
 };
 
 pub fn init(renderer: sdl3.render.Renderer) !EnumArray(Sprite, SpriteData) {
-    const dice_texture = try sdl3.image.loadTexture(renderer, "dice.png");
+    const stream = try sdl3.io_stream.Stream.initFromConstMem(@embedFile("dice.png"));
+    const dice_texture = try sdl3.image.loadTextureIo(renderer, stream, true);
 
     return EnumArray(Sprite, SpriteData).init(
         .{
