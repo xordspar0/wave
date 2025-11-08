@@ -6,6 +6,7 @@ const Sprite = @import("sprites.zig").Sprite;
 pub const Drawable = union(enum) {
     FilledRect: FilledRect,
     Texture: Texture,
+    Text: Text,
 };
 
 pub const FilledRect = struct {
@@ -23,4 +24,10 @@ pub const Texture = struct {
     origin: Origin,
     sprite: Sprite,
     color: Color,
+};
+
+pub const Text = struct {
+    x: i16,
+    y: i16,
+    text: []u8,
 };

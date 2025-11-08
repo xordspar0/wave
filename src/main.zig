@@ -29,16 +29,24 @@ pub fn main() !void {
         .payments = .{game.Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 6,
     };
 
-    const sprites = graphics.sprites.init(renderer) catch |err| {
+    const font = graphics.font.init(renderer) catch {
         try sdl3.log.Category.logCritical(
             .application,
-            "Failed to load sprites: {}",
-            .{err},
+            "Failed to load font: {?s}",
+            .{sdl3.errors.get()},
+        );
+        return;
+    };
+    const sprites = graphics.sprites.init(renderer) catch {
+        try sdl3.log.Category.logCritical(
+            .application,
+            "Failed to load sprites: {?s}",
+            .{sdl3.errors.get()},
         );
         return;
     };
 
-    Gameloop(game_arena.allocator(), renderer, g, sprites) catch {
+    Gameloop(game_arena.allocator(), renderer, g, font, sprites) catch {
         try log.logCritical(
             .application,
             "Fatal runtime error: {?s}",
@@ -71,7 +79,13 @@ fn SDLInit() !struct { sdl3.video.Window, sdl3.render.Renderer } {
     return sdl3.render.Renderer.initWithWindow("Wave", 640, 480, .{});
 }
 
-fn Gameloop(game_arena: Allocator, renderer: sdl3.render.Renderer, g: game.Game, sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData)) !void {
+fn Gameloop(
+    game_arena: Allocator,
+    renderer: sdl3.render.Renderer,
+    g: game.Game,
+    font: graphics.font.Font,
+    sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData),
+) !void {
     var state = g.state;
     while (state != .Quit) {
         var frameArena = std.heap.ArenaAllocator.init(game_arena);
@@ -164,6 +178,24 @@ fn Gameloop(game_arena: Allocator, renderer: sdl3.render.Renderer, g: game.Game,
                     renderer.setDrawColor(white) catch {
                         try log.logWarn(.application, "Failed to set color: {?s}", .{sdl3.errors.get()});
                     };
+                },
+                .Text => |t| {
+                    for (t.text, 0..) |char, i| {
+                        const srcRect = font.getChar(char);
+
+                        renderer.renderTexture(
+                            font.spritesheet,
+                            srcRect,
+                            .{
+                                .x = @as(f32, @floatFromInt(t.x)) + @as(f32, @floatFromInt(i)) * (srcRect.w + 2),
+                                .y = @floatFromInt(t.y),
+                                .w = srcRect.w,
+                                .h = srcRect.h,
+                            },
+                        ) catch {
+                            try log.logError(.application, "Failed to draw a texture: {?s}", .{sdl3.errors.get()});
+                        };
+                    }
                 },
             }
         }

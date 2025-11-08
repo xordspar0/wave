@@ -1,4 +1,5 @@
 pub const Drawable = @import("drawable.zig").Drawable;
+pub const font = @import("font.zig");
 pub const sprites = @import("sprites.zig");
 
 pub const Color = struct {

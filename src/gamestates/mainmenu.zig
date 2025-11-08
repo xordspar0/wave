@@ -63,6 +63,11 @@ pub const MainMenu = struct {
             .sprite = .die_face,
             .color = Color{ .r = 255, .g = 255, .b = 255 },
         } });
+        try objects.append(a, Drawable{ .Text = .{
+            .x = 100,
+            .y = 200,
+            .text = try a.dupe(u8, "HELLO WORLD"),
+        } });
 
         return objects;
     }
