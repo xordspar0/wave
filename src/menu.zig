@@ -21,22 +21,20 @@ pub fn Menu(comptime Button: type) type {
         const button_padding = 5;
         const button_margin = 10;
 
-        pub fn up(self: Self) Self {
-            return .{
-                .x = self.x,
-                .y = self.y,
-                .buttons = self.buttons,
-                .selected = std.math.clamp(self.selected - 1, 0, self.buttons.values.len - 1),
-            };
+        pub fn up(old: Self) Self {
+            var new = old;
+
+            new.selected = std.math.clamp(old.selected - 1, 0, old.buttons.values.len - 1);
+
+            return new;
         }
 
-        pub fn down(self: Self) Self {
-            return .{
-                .x = self.x,
-                .y = self.y,
-                .buttons = self.buttons,
-                .selected = std.math.clamp(self.selected + 1, 0, self.buttons.values.len - 1),
-            };
+        pub fn down(old: Self) Self {
+            var new = old;
+
+            new.selected = std.math.clamp(old.selected + 1, 0, old.buttons.values.len - 1);
+
+            return new;
         }
 
         pub fn select(self: Self) Button {
