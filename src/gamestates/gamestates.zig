@@ -8,6 +8,7 @@ const graphics = @import("../graphics/graphics.zig");
 const Drawable = graphics.Drawable;
 
 pub const MainMenu = @import("mainmenu.zig").MainMenu;
+pub const Running = @import("running.zig").Running;
 
 pub const State = union(enum) {
     MainMenu: MainMenu,
@@ -44,23 +45,7 @@ pub const Scores = struct {
     }
 
     fn draw(_: Scores, _: Allocator) !ArrayList(Drawable) {
-        const objects = ArrayList(Drawable).empty;
-        return objects;
-    }
-};
-
-const Running = struct {
-    fn update(self: Running) State {
-        return State{ .Running = self };
-    }
-
-    fn keyDown(self: Running, _: Keycode) State {
-        return State{ .Running = self };
-    }
-
-    fn draw(_: Running, _: Allocator) !ArrayList(Drawable) {
-        const objects = ArrayList(Drawable).empty;
-        return objects;
+        return ArrayList(Drawable).empty;
     }
 };
 
@@ -74,7 +59,6 @@ const Quit = struct {
     }
 
     fn draw(_: Quit, _: Allocator) !ArrayList(Drawable) {
-        const objects = ArrayList(Drawable).empty;
-        return objects;
+        return ArrayList(Drawable).empty;
     }
 };

@@ -23,14 +23,8 @@ pub fn main() !void {
     var game_arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer game_arena.deinit();
 
-    const g: game.Game = .{
-        .state = .{ .MainMenu = gamestates.MainMenu{} },
-        .dice = .{game.Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 4,
-        .payments = .{game.Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 6,
-    };
-
     const font = graphics.font.init(renderer) catch {
-        try sdl3.log.Category.logCritical(
+        try log.logCritical(
             .application,
             "Failed to load font: {?s}",
             .{sdl3.errors.get()},
@@ -38,7 +32,7 @@ pub fn main() !void {
         return;
     };
     const sprites = graphics.sprites.init(renderer) catch {
-        try sdl3.log.Category.logCritical(
+        try log.logCritical(
             .application,
             "Failed to load sprites: {?s}",
             .{sdl3.errors.get()},
@@ -46,7 +40,13 @@ pub fn main() !void {
         return;
     };
 
-    Gameloop(game_arena.allocator(), renderer, g, font, sprites) catch {
+    Gameloop(
+        game_arena.allocator(),
+        renderer,
+        .{ .MainMenu = .{} },
+        font,
+        sprites,
+    ) catch {
         try log.logCritical(
             .application,
             "Fatal runtime error: {?s}",
@@ -82,24 +82,14 @@ fn SDLInit() !struct { sdl3.video.Window, sdl3.render.Renderer } {
 fn Gameloop(
     game_arena: Allocator,
     renderer: sdl3.render.Renderer,
-    g: game.Game,
+    initialState: gamestates.State,
     font: graphics.font.Font,
     sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData),
 ) !void {
-    var state = g.state;
+    var state = initialState;
     while (state != .Quit) {
         var frameArena = std.heap.ArenaAllocator.init(game_arena);
         defer frameArena.deinit();
-
-        const background = sdl3.pixels.Color{ .r = 255, .g = 128, .b = 255, .a = 255 };
-        const white = sdl3.pixels.Color{ .r = 255, .g = 255, .b = 255, .a = 255 };
-
-        renderer.setDrawColor(background) catch {
-            try log.logWarn(.application, "Failed to set color: {?s}", .{sdl3.errors.get()});
-        };
-        renderer.clear() catch {
-            try log.logWarn(.application, "Failed to clear renderer: {?s}", .{sdl3.errors.get()});
-        };
 
         while (sdl3.events.poll()) |event|
             switch (event) {
@@ -112,6 +102,15 @@ fn Gameloop(
             };
 
         state = state.update();
+
+        const white = sdl3.pixels.Color{ .r = 255, .g = 255, .b = 255, .a = 255 };
+
+        renderer.setDrawColor(sdl3.pixels.Color{ .r = 0, .g = 0, .b = 0, .a = 255 }) catch {
+            try log.logWarn(.application, "Failed to set color: {?s}", .{sdl3.errors.get()});
+        };
+        renderer.clear() catch {
+            try log.logWarn(.application, "Failed to clear renderer: {?s}", .{sdl3.errors.get()});
+        };
 
         const draw_objects = state.draw(frameArena.allocator()) catch |err| {
             try log.logError(.application, "Failed to draw state {}: {}", .{ state, err });

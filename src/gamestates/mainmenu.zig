@@ -9,6 +9,8 @@ const graphics = @import("../graphics/graphics.zig");
 const Color = graphics.Color;
 const Drawable = graphics.Drawable;
 
+const game = @import("../game.zig");
+
 const gamestates = @import("gamestates.zig");
 const State = gamestates.State;
 
@@ -40,7 +42,7 @@ pub const MainMenu = struct {
             .up => .{ .MainMenu = .{ .menu = self.menu.up() } },
             .down => .{ .MainMenu = .{ .menu = self.menu.down() } },
             .return_key => switch (self.menu.select()) {
-                .new_game => .{ .Running = .{} },
+                .new_game => .{ .Running = .{ .game = game.Game.init().rollDice() } },
                 .high_scores => .{ .Scores = .{} },
                 .quit => .{ .Quit = .{} },
             },
@@ -49,21 +51,6 @@ pub const MainMenu = struct {
     }
 
     pub fn draw(self: MainMenu, a: Allocator) !ArrayList(Drawable) {
-        var objects = ArrayList(Drawable).empty;
-
-        // XXX: Is it really necessary to allocate space for the return value of menu.draw a second time?
-        try objects.appendSlice(a, (try self.menu.draw(a)).items);
-
-        // DEBUG
-        try objects.append(a, Drawable{ .Texture = .{
-            .x = 25,
-            .y = 25,
-            .r = 45,
-            .origin = .center,
-            .sprite = .die_face,
-            .color = Color{ .r = 255, .g = 255, .b = 255 },
-        } });
-
-        return objects;
+        return try self.menu.draw(a);
     }
 };
