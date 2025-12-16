@@ -1,3 +1,0 @@
-[submodule "vendor/sdl3"]
-	path = vendor/sdl3
-	url = https://github.com/PascalGameDevelopment/SDL3-for-Pascal.git
