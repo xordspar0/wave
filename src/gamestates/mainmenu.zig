@@ -7,7 +7,7 @@ const Keycode = @import("sdl3").keycode.Keycode;
 
 const graphics = @import("../graphics/graphics.zig");
 const Color = graphics.Color;
-const Drawable = graphics.Drawable;
+const drawable = graphics.drawable;
 
 const game = @import("../game.zig");
 
@@ -50,7 +50,7 @@ pub const MainMenu = struct {
         };
     }
 
-    pub fn draw(self: MainMenu, a: Allocator) !ArrayList(Drawable) {
+    pub fn draw(self: MainMenu, a: Allocator) !ArrayList(drawable.Drawable) {
         return try self.menu.draw(a);
     }
 };

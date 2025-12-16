@@ -5,7 +5,7 @@ const ArrayList = std.ArrayList;
 const Keycode = @import("sdl3").keycode.Keycode;
 
 const graphics = @import("../graphics/graphics.zig");
-const Drawable = graphics.Drawable;
+const drawable = graphics.drawable;
 
 pub const MainMenu = @import("mainmenu.zig").MainMenu;
 pub const Running = @import("running.zig").Running;
@@ -28,7 +28,7 @@ pub const State = union(enum) {
         };
     }
 
-    pub fn draw(self: State, a: Allocator) !ArrayList(Drawable) {
+    pub fn draw(self: State, a: Allocator) !ArrayList(drawable.Drawable) {
         return switch (self) {
             inline else => |impl| impl.draw(a),
         };
@@ -44,8 +44,8 @@ pub const Scores = struct {
         return .{ .Scores = self };
     }
 
-    fn draw(_: Scores, _: Allocator) !ArrayList(Drawable) {
-        return ArrayList(Drawable).empty;
+    fn draw(_: Scores, _: Allocator) !ArrayList(drawable.Drawable) {
+        return ArrayList(drawable.Drawable).empty;
     }
 };
 
@@ -58,7 +58,7 @@ const Quit = struct {
         return State{ .Quit = self };
     }
 
-    fn draw(_: Quit, _: Allocator) !ArrayList(Drawable) {
-        return ArrayList(Drawable).empty;
+    fn draw(_: Quit, _: Allocator) !ArrayList(drawable.Drawable) {
+        return ArrayList(drawable.Drawable).empty;
     }
 };

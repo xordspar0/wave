@@ -8,12 +8,12 @@ const Color = graphics.Color;
 
 pub const Game = struct {
     dice: [4]Die,
-    payments: [6]u8,
+    payments: [6]Die,
 
     pub fn init() Game {
         return .{
             .dice = .{Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 4,
-            .payments = .{0} ** 6,
+            .payments = .{Die{ .x = 0, .y = 0, .r = 0, .value = 0 }} ** 6,
         };
     }
 
