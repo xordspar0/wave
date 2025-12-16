@@ -28,6 +28,12 @@ pub const State = union(enum) {
         };
     }
 
+    pub fn mouseButtonDown(self: State, x: i16, y: i16) State {
+        return switch (self) {
+            inline else => |impl| impl.mouseButtonDown(x, y),
+        };
+    }
+
     pub fn draw(self: State, a: Allocator) !ArrayList(drawable.Drawable) {
         return switch (self) {
             inline else => |impl| impl.draw(a),
@@ -44,6 +50,10 @@ pub const Scores = struct {
         return .{ .Scores = self };
     }
 
+    fn mouseButtonDown(self: Scores, _: i16, _: i16) State {
+        return .{ .Scores = self };
+    }
+
     fn draw(_: Scores, _: Allocator) !ArrayList(drawable.Drawable) {
         return ArrayList(drawable.Drawable).empty;
     }
@@ -56,6 +66,10 @@ const Quit = struct {
 
     fn keyDown(self: Quit, _: Keycode) State {
         return State{ .Quit = self };
+    }
+
+    fn mouseButtonDown(self: Quit, _: i16, _: i16) State {
+        return .{ .Quit = self };
     }
 
     fn draw(_: Quit, _: Allocator) !ArrayList(drawable.Drawable) {

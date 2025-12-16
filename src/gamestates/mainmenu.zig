@@ -50,6 +50,11 @@ pub const MainMenu = struct {
         };
     }
 
+    // TODO
+    pub fn mouseButtonDown(self: MainMenu, _: i16, _: i16) State {
+        return .{ .MainMenu = self };
+    }
+
     pub fn draw(self: MainMenu, a: Allocator) !ArrayList(drawable.Drawable) {
         return try self.menu.draw(a);
     }

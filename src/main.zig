@@ -96,6 +96,9 @@ fn Gameloop(
                 .key_down => |keyboard| if (keyboard.key) |key| {
                     state = state.keyDown(key);
                 },
+                .mouse_button_down => |mouse_button| {
+                    state = state.mouseButtonDown(@intFromFloat(mouse_button.x), @intFromFloat(mouse_button.y));
+                },
                 .quit => state = .Quit,
                 .terminating => state = .Quit,
                 else => {},
