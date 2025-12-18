@@ -108,11 +108,13 @@ pub const Running = struct {
     fn drawCosts(a: Allocator, payments: []const ?game.Die, x: i16, y: i16) !ArrayList(drawable.Drawable) {
         const row_height = die_width;
         const row_padding = 10;
+        const text_padding = 5;
 
         var objects = ArrayList(drawable.Drawable).empty;
 
         for (payments, 0..) |payment_slot, i| {
             const row_y = y + @as(i16, @intCast(i)) * (row_height + row_padding);
+            const cost = @as(u8, @intCast(i)) + 2;
 
             const menu_label = drawable.FilledRect{
                 .x = x,
@@ -123,9 +125,9 @@ pub const Running = struct {
             };
             try objects.append(a, .{ .FilledRect = menu_label });
             try objects.append(a, .{ .Text = .{
-                .x = x,
-                .y = row_y,
-                .text = try std.fmt.allocPrint(a, "{d}", .{i}),
+                .x = x + text_padding,
+                .y = row_y + text_padding,
+                .text = try std.fmt.allocPrint(a, "{d}", .{cost}),
             } });
 
             const first_die_x = x + menu_label.w + row_padding;
@@ -159,8 +161,7 @@ pub const Running = struct {
                         .x = second_die_x,
                         .y = row_y,
                         .r = 0,
-                        // DEBUG: The goal for this row is just made up as i+1 for now.
-                        .value = @as(u8, @intCast(i)) + 1 - payment.value,
+                        .value = cost - payment.value,
                     },
                     .top_left,
                 ))).items);
