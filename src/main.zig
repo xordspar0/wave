@@ -79,9 +79,7 @@ fn SDLInit() !struct { sdl3.video.Window, sdl3.render.Renderer } {
 
     const window, const renderer = try sdl3.render.Renderer.initWithWindow("Wave", 640, 480, .{ .high_pixel_density = true });
 
-    // TODO: Once zig-sdl3 catches up with SDL 3.4, replace the following with:
-    // renderer.setDefaultTextureScaleMode(.pixelart);
-    _ = sdl3.c.SDL_SetDefaultTextureScaleMode(renderer.value, 2);
+    try renderer.setDefaultTextureScaleMode(.pixel_art);
 
     return .{ window, renderer };
 }
@@ -90,18 +88,23 @@ fn Gameloop(
     game_arena: Allocator,
     window: sdl3.video.Window,
     renderer: sdl3.render.Renderer,
-    initialState: gamestates.State,
+    initial_state: gamestates.State,
     font: graphics.font.Font,
     sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData),
 ) !void {
-    var state = initialState;
+    var state = initial_state;
 
-    const screenBuffer = try makeTextureFromWindowLogicalSize(window, renderer);
-    defer screenBuffer.deinit();
+    const screen_buffer = window_sized_texture: {
+        const format = try window.getPixelFormat();
+        const width, const height = try window.getSize();
+
+        break :window_sized_texture try renderer.createTexture(format, .target, width, height);
+    };
+    defer screen_buffer.deinit();
 
     while (state != .Quit) {
-        var frameArena = std.heap.ArenaAllocator.init(game_arena);
-        defer frameArena.deinit();
+        var frame_arena = std.heap.ArenaAllocator.init(game_arena);
+        defer frame_arena.deinit();
 
         while (sdl3.events.poll()) |event|
             switch (event) {
@@ -118,7 +121,7 @@ fn Gameloop(
 
         state = state.update();
 
-        renderer.setTarget(screenBuffer) catch {
+        renderer.setTarget(screen_buffer) catch {
             try log.logWarn(.application, "Failed to set render target to offscreen buffer: {?s}", .{sdl3.errors.get()});
         };
 
@@ -131,7 +134,7 @@ fn Gameloop(
             try log.logWarn(.application, "Failed to clear renderer: {?s}", .{sdl3.errors.get()});
         };
 
-        const draw_objects = state.draw(frameArena.allocator()) catch |err| {
+        const draw_objects = state.draw(frame_arena.allocator()) catch |err| {
             try log.logError(.application, "Failed to draw state {}: {}", .{ state, err });
             continue;
         };
@@ -223,7 +226,7 @@ fn Gameloop(
             continue;
         };
 
-        renderer.renderTexture(screenBuffer, null, null) catch {
+        renderer.renderTexture(screen_buffer, null, null) catch {
             try log.logWarn(.application, "Failed to render screen buffer to window: {?s}", .{sdl3.errors.get()});
             continue;
         };
@@ -232,12 +235,4 @@ fn Gameloop(
             try log.logWarn(.application, "Failed to present renderer: {?s}", .{sdl3.errors.get()});
         };
     }
-}
-
-fn makeTextureFromWindowLogicalSize(window: sdl3.video.Window, renderer: sdl3.render.Renderer) !sdl3.render.Texture {
-    const format = try window.getPixelFormat();
-    const width, const height = try window.getSize();
-
-    // TODO: This is renamed to createTexture() on main. Update this when updating to the next release.
-    return try sdl3.render.Texture.init(renderer, format, .target, width, height);
 }
