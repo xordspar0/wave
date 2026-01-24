@@ -9,6 +9,9 @@ const game = @import("game.zig");
 const graphics = @import("graphics/graphics.zig");
 const gamestates = @import("gamestates/gamestates.zig");
 
+const screen_width = 640;
+const screen_height = 480;
+
 pub fn main() !void {
     defer sdl3.shutdown();
     const window, const renderer = SDLInit() catch {
@@ -77,8 +80,8 @@ fn SDLInit() !struct { sdl3.video.Window, sdl3.render.Renderer } {
 
     try sdl3.init(sdl3.InitFlags{ .video = true });
 
-    const window, const renderer = try sdl3.render.Renderer.initWithWindow("Wave", 640, 480, .{ .high_pixel_density = true });
-
+    const window, const renderer = try sdl3.render.Renderer.initWithWindow("Wave", screen_width, screen_height, .{ .high_pixel_density = true });
+    try renderer.setLogicalPresentation(screen_width, screen_height, .letter_box);
     try renderer.setDefaultTextureScaleMode(.pixel_art);
 
     return .{ window, renderer };
@@ -93,6 +96,9 @@ fn Gameloop(
     sprites: EnumArray(graphics.sprites.Sprite, graphics.sprites.SpriteData),
 ) !void {
     var state = initial_state;
+    var video_state: struct {
+        fullscreen: bool = false,
+    } = .{};
 
     const screen_buffer = window_sized_texture: {
         const format = try window.getPixelFormat();
@@ -109,7 +115,16 @@ fn Gameloop(
         while (sdl3.events.poll()) |event|
             switch (event) {
                 .key_down => |keyboard| if (keyboard.key) |key| {
-                    state = state.keyDown(key);
+                    switch (key) {
+                        .func11 => {
+                            video_state.fullscreen = !video_state.fullscreen;
+                            window.setFullscreen(video_state.fullscreen) catch {
+                                video_state.fullscreen = !video_state.fullscreen;
+                                try log.logError(.application, "Failed to set fullscreen mode: {?s}", .{sdl3.errors.get()});
+                            };
+                        },
+                        else => state = state.keyDown(key),
+                    }
                 },
                 .mouse_button_down => |mouse_button| {
                     state = state.mouseButtonDown(@intFromFloat(mouse_button.x), @intFromFloat(mouse_button.y));
@@ -126,12 +141,13 @@ fn Gameloop(
         };
 
         const white = sdl3.pixels.Color{ .r = 255, .g = 255, .b = 255, .a = 255 };
+        const black = sdl3.pixels.Color{ .r = 0, .g = 0, .b = 0, .a = 255 };
 
-        renderer.setDrawColor(sdl3.pixels.Color{ .r = 0, .g = 0, .b = 0, .a = 255 }) catch {
+        renderer.setDrawColor(black) catch {
             try log.logWarn(.application, "Failed to set color: {?s}", .{sdl3.errors.get()});
         };
         renderer.clear() catch {
-            try log.logWarn(.application, "Failed to clear renderer: {?s}", .{sdl3.errors.get()});
+            try log.logWarn(.application, "Failed to clear screen buffer: {?s}", .{sdl3.errors.get()});
         };
 
         const draw_objects = state.draw(frame_arena.allocator()) catch |err| {
@@ -222,17 +238,25 @@ fn Gameloop(
         }
 
         renderer.setTarget(null) catch {
-            try log.logWarn(.application, "Failed to set render target to window: {?s}", .{sdl3.errors.get()});
+            try log.logError(.application, "Failed to set render target to window: {?s}", .{sdl3.errors.get()});
+            continue;
+        };
+
+        renderer.setDrawColor(black) catch {
+            try log.logWarn(.application, "Failed to set color: {?s}", .{sdl3.errors.get()});
+        };
+        renderer.clear() catch {
+            try log.logError(.application, "Failed to clear screen: {?s}", .{sdl3.errors.get()});
             continue;
         };
 
         renderer.renderTexture(screen_buffer, null, null) catch {
-            try log.logWarn(.application, "Failed to render screen buffer to window: {?s}", .{sdl3.errors.get()});
+            try log.logError(.application, "Failed to render screen buffer to window: {?s}", .{sdl3.errors.get()});
             continue;
         };
 
         renderer.present() catch {
-            try log.logWarn(.application, "Failed to present renderer: {?s}", .{sdl3.errors.get()});
+            try log.logError(.application, "Failed to present renderer: {?s}", .{sdl3.errors.get()});
         };
     }
 }
