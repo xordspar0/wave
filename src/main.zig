@@ -12,7 +12,7 @@ const gamestates = @import("gamestates/gamestates.zig");
 const screen_width = 640;
 const screen_height = 480;
 
-pub fn main() !void {
+pub fn main(init: std.process.Init) !void {
     defer sdl3.shutdown();
     const window, const renderer = SDLInit() catch {
         try sdl3.log.Category.logCritical(
@@ -22,9 +22,6 @@ pub fn main() !void {
         );
         return;
     };
-
-    var game_arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer game_arena.deinit();
 
     const font = graphics.font.init(renderer) catch {
         try log.logCritical(
@@ -44,7 +41,8 @@ pub fn main() !void {
     };
 
     Gameloop(
-        game_arena.allocator(),
+        init.arena.allocator(),
+        init.io,
         window,
         renderer,
         .{ .MainMenu = .{} },
@@ -89,6 +87,7 @@ fn SDLInit() !struct { sdl3.video.Window, sdl3.render.Renderer } {
 
 fn Gameloop(
     game_arena: Allocator,
+    io: std.Io,
     window: sdl3.video.Window,
     renderer: sdl3.render.Renderer,
     initial_state: gamestates.State,
@@ -123,11 +122,11 @@ fn Gameloop(
                                 try log.logError(.application, "Failed to set fullscreen mode: {?s}", .{sdl3.errors.get()});
                             };
                         },
-                        else => state = state.keyDown(key),
+                        else => state = state.keyDown(key, io),
                     }
                 },
                 .mouse_button_down => |mouse_button| {
-                    state = state.mouseButtonDown(@intFromFloat(mouse_button.x), @intFromFloat(mouse_button.y));
+                    state = state.mouseButtonDown(@trunc(mouse_button.x), @trunc(mouse_button.y));
                 },
                 .quit => state = .Quit,
                 .terminating => state = .Quit,
@@ -163,10 +162,10 @@ fn Gameloop(
                     };
 
                     renderer.renderFillRect(.{
-                        .x = @floatFromInt(r.x),
-                        .y = @floatFromInt(r.y),
-                        .w = @floatFromInt(r.w),
-                        .h = @floatFromInt(r.h),
+                        .x = r.x,
+                        .y = r.y,
+                        .w = r.w,
+                        .h = r.h,
                     }) catch {
                         try log.logError(.application, "Failed to draw a rectangle: {?s}", .{sdl3.errors.get()});
                     };
@@ -187,14 +186,14 @@ fn Gameloop(
                         sprite.rect,
                         switch (t.origin) {
                             .top_left => .{
-                                .x = @floatFromInt(t.x),
-                                .y = @floatFromInt(t.y),
+                                .x = t.x,
+                                .y = t.y,
                                 .w = sprite.rect.w,
                                 .h = sprite.rect.h,
                             },
                             .center => .{
-                                .x = @as(f32, @floatFromInt(t.x)) - sprite.rect.w / 2,
-                                .y = @as(f32, @floatFromInt(t.y)) - sprite.rect.h / 2,
+                                .x = t.x - sprite.rect.w / 2,
+                                .y = t.y - sprite.rect.h / 2,
                                 .w = sprite.rect.w,
                                 .h = sprite.rect.h,
                             },
@@ -224,8 +223,8 @@ fn Gameloop(
                             font.spritesheet,
                             srcRect,
                             .{
-                                .x = @as(f32, @floatFromInt(t.x)) + @as(f32, @floatFromInt(i)) * (srcRect.w + 2),
-                                .y = @floatFromInt(t.y),
+                                .x = t.x + @as(f32, @floatFromInt(i)) * (srcRect.w + 2),
+                                .y = t.y,
                                 .w = srcRect.w,
                                 .h = srcRect.h,
                             },

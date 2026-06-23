@@ -22,9 +22,12 @@ pub const State = union(enum) {
         };
     }
 
-    pub fn keyDown(self: State, key: Keycode) State {
+    // TODO: Think about io arg. Is it desirable?
+    // Should all functions in the interface take an io arg?
+    // Should it be the third arg, or should it be in a different position?
+    pub fn keyDown(self: State, key: Keycode, io: std.Io) State {
         return switch (self) {
-            inline else => |impl| impl.keyDown(key),
+            inline else => |impl| impl.keyDown(key, io),
         };
     }
 
@@ -46,7 +49,7 @@ pub const Scores = struct {
         return .{ .Scores = self };
     }
 
-    fn keyDown(self: Scores, _: Keycode) State {
+    fn keyDown(self: Scores, _: Keycode, _: std.Io) State {
         return .{ .Scores = self };
     }
 
@@ -64,7 +67,7 @@ const Quit = struct {
         return State{ .Quit = self };
     }
 
-    fn keyDown(self: Quit, _: Keycode) State {
+    fn keyDown(self: Quit, _: Keycode, _: std.Io) State {
         return State{ .Quit = self };
     }
 

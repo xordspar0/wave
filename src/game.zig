@@ -17,10 +17,11 @@ pub const Game = struct {
         };
     }
 
-    pub fn rollDice(self: Game) Game {
+    pub fn rollDice(self: Game, io: std.Io) Game {
         var g = self;
-        // TODO: Figure out how to use non-crypto random numbers.
-        const rand = std.crypto.random;
+
+        const rand_impl = std.Random.IoSource{ .io = io };
+        const rand = rand_impl.interface();
 
         for (0..g.dice.len) |i| {
             g.dice[i] = .{

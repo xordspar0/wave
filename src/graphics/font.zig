@@ -11,10 +11,10 @@ pub const Font = struct {
 
     pub fn getChar(self: Font, char: u8) sdl3.rect.FRect {
         return .{
-            .x = @floatFromInt(char % self.char_width * self.char_width),
-            .y = @floatFromInt(@divFloor(char, self.char_width) * self.char_height),
-            .w = @floatFromInt(self.char_width),
-            .h = @floatFromInt(self.char_height),
+            .x = char % self.char_width * self.char_width,
+            .y = @divFloor(char, self.char_width) * self.char_height,
+            .w = self.char_width,
+            .h = self.char_height,
         };
     }
 };

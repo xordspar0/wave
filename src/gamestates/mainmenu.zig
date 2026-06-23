@@ -37,12 +37,12 @@ pub const MainMenu = struct {
         return .{ .MainMenu = self };
     }
 
-    pub fn keyDown(self: MainMenu, key: Keycode) State {
+    pub fn keyDown(self: MainMenu, key: Keycode, io: std.Io) State {
         return switch (key) {
             .up => .{ .MainMenu = .{ .menu = self.menu.up() } },
             .down => .{ .MainMenu = .{ .menu = self.menu.down() } },
             .return_key => switch (self.menu.select()) {
-                .new_game => .{ .Running = .{ .game = game.Game.init().rollDice() } },
+                .new_game => .{ .Running = .{ .game = game.Game.init().rollDice(io) } },
                 .high_scores => .{ .Scores = .{} },
                 .quit => .{ .Quit = .{} },
             },

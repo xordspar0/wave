@@ -25,11 +25,11 @@ pub const Running = struct {
         return .{ .Running = self };
     }
 
-    pub fn keyDown(self: Running, key: Keycode) State {
+    pub fn keyDown(self: Running, key: Keycode, io: std.Io) State {
         return switch (key) {
             .escape => .{ .MainMenu = .{} },
             // DEBUG: Press F5 to reroll the dice.
-            .func5 => .{ .Running = .{ .game = self.game.rollDice() } },
+            .func5 => .{ .Running = .{ .game = self.game.rollDice(io) } },
             else => .{ .Running = self },
         };
     }
@@ -93,8 +93,8 @@ pub const Running = struct {
                 .toCoordinates();
             const offset: i16 = if (origin == .top_left) die_width / 2 else 0;
             try objects.append(a, drawable.Drawable{ .Texture = .{
-                .x = die.x + @as(i16, @intFromFloat(x)) + offset,
-                .y = die.y + @as(i16, @intFromFloat(y)) + offset,
+                .x = die.x + @as(i16, @trunc(x)) + offset,
+                .y = die.y + @as(i16, @trunc(y)) + offset,
                 .r = 0,
                 .origin = .center,
                 .sprite = .die_dot,

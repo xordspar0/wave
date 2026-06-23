@@ -1,10 +1,12 @@
+ZIG=zig
+
 .PHONY: build
 build:
-	zig build
+	$(ZIG) build
 
 .PHONY: release
 release:
-	zig build -Doptimize=ReleaseFast
+	$(ZIG) build -Doptimize=ReleaseFast
 
 .PHONY: run
 run: build
